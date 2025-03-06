@@ -1,0 +1,6 @@
+@FGN_WEB_REHBER.Server_HostAddress = http://localhost:5143
+
+GET {{FGN_WEB_REHBER.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
