@@ -27,7 +27,7 @@ namespace FGN_WEB_REHBER.Server
 
             var app = builder.Build();
 
-            app.UseMiddleware<ExceptionHandling>();
+           // app.UseMiddleware<ExceptionHandling>();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
