@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../assets/Fergani.jpg";
+import logo from "/fergani-light-logo.png";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaClipboardList, FaUserShield } from "react-icons/fa";
 

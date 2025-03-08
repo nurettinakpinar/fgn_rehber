@@ -2,13 +2,12 @@
 using FGN_WEB_REHBER.Server.DTO;
 using FGN_WEB_REHBER.Server.Models.Entities;
 using FGN_WEB_REHBER.Server.Models.Enums;
-using Microsoft.AspNetCore.Http;
+using FGN_WEB_REHBER.Server.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Extensions;
-using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System.Globalization;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace FGN_WEB_REHBER.Server.Controllers
 {
@@ -27,15 +26,30 @@ namespace FGN_WEB_REHBER.Server.Controllers
         public async Task<IActionResult> GetCalisanlar(string? searchTerm, TakimEnum? takimEnum)
         {
             var query = _context.Employees.AsQueryable();
+
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 query = query.Where(e => e.AdSoyad.Contains(searchTerm) ||
-                e.IsCepTelNo.Contains(searchTerm) ||
-                takimEnum != null ? e.Takim == takimEnum : false);
+                                         e.IsCepTelNo.Contains(searchTerm));
             }
+
+            if (takimEnum != null)
+            {
+                query = query.Where(e => e.Takim == takimEnum);
+            }
+
             var employees = await query.ToListAsync();
-            return Ok(employees);
+
+            var settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.None,
+                Converters = new List<JsonConverter> { new StringEnumConverter() }
+            };
+
+            var jsonResult = JsonConvert.SerializeObject(employees, settings);
+            return Ok(jsonResult);
         }
+
 
         [HttpPost("talep-olustur")]
         public async Task<IActionResult> YeniCalisanTalepOlustur(EmployeeDTO employeeDTO)

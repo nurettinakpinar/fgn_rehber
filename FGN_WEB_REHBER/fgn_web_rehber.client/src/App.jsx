@@ -15,10 +15,7 @@ function App() {
 
     return (
         <div>
-            <Navbar
-                onTalepClick={handleTalepClick}
-                onAdminClick={handleAdminClick}
-            />
+            <Navbar onTalepClick={handleTalepClick} onAdminClick={handleAdminClick} />
             <div className="container mt-5">
                 <h1>Welcome to the Homepage</h1>
             </div>
