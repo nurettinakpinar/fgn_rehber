@@ -1,6 +1,5 @@
 ﻿using FGN_WEB_REHBER.Server.Models.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FGN_WEB_REHBER.Server.Models.Entities
 {

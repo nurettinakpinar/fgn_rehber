@@ -2,12 +2,13 @@
 using FGN_WEB_REHBER.Server.DTO;
 using FGN_WEB_REHBER.Server.Models.Entities;
 using FGN_WEB_REHBER.Server.Models.Enums;
-using FGN_WEB_REHBER.Server.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Globalization;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FGN_WEB_REHBER.Server.Controllers
 {
@@ -42,7 +43,7 @@ namespace FGN_WEB_REHBER.Server.Controllers
 
             var settings = new JsonSerializerSettings
             {
-                Formatting = Formatting.None,
+                Formatting = Formatting.Indented,
                 Converters = new List<JsonConverter> { new StringEnumConverter() }
             };
 
@@ -52,7 +53,7 @@ namespace FGN_WEB_REHBER.Server.Controllers
 
 
         [HttpPost("talep-olustur")]
-        public async Task<IActionResult> YeniCalisanTalepOlustur(EmployeeDTO employeeDTO)
+        public async Task<ActionResult> YeniCalisanTalepOlustur(EmployeeDTO employeeDTO)
         {
             CultureInfo culture = new CultureInfo("tr-TR");
 
@@ -69,12 +70,13 @@ namespace FGN_WEB_REHBER.Server.Controllers
             var result = await _context.SaveChangesAsync() > 0;
             if (result)
             {
-                return Ok("Talebiniz Başarıyla Alındı Bilgi Teknolojileri ekibi tarafından incelendikten sonra ekleme yapılacaktır.");
+                return CreatedAtAction("Talep-olustur", "Talebiniz Başarıyla Alındı Bilgi Teknolojileri ekibi tarafından incelendikten sonra ekleme yapılacaktır.");
             }
 
             return BadRequest(new ProblemDetails { Title = "Talep oluşturulurken bir hata meydana geldi. BT ekibi ile ilteşime geçiniz." });
         }
 
+        [Authorize]
         [HttpPost("talep-onayla/{Id}")]
         public async Task<IActionResult> YeniCalisanTalepOnayla(int Id)
         {
@@ -90,12 +92,21 @@ namespace FGN_WEB_REHBER.Server.Controllers
             var result = await _context.SaveChangesAsync() > 0;
             if (result)
             {
-                return Ok("Çalışan Başarıyla Kaydedilmiştir.");
+                var employees = await _context.Employees.ToListAsync();
+
+                var settings = new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
+                    Converters = new List<JsonConverter> { new StringEnumConverter() }
+                };
+
+                var jsonResult = JsonConvert.SerializeObject(employees, settings);
+                return Ok(jsonResult);
             }
             return BadRequest(new ProblemDetails { Title = "OKTAY NURETTIN-HALİTLE KONUŞ DURUM VAHİM :( DB GG GALİBA KESBİŞ OLSUN" });
         }
 
-
+        [Authorize]
         [HttpPost("talep-reddet/{Id}")]
         public async Task<IActionResult> YeniCalisanTalepReddet(int Id)
         {
@@ -109,9 +120,19 @@ namespace FGN_WEB_REHBER.Server.Controllers
             employee.Active = false;
 
             var result = await _context.SaveChangesAsync() > 0;
+
             if (result)
             {
-                return Ok("Çalışanın talebi reddedilmiştir.");
+                var employees = await _context.Employees.ToListAsync();
+
+                var settings = new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
+                    Converters = new List<JsonConverter> { new StringEnumConverter() }
+                };
+
+                var jsonResult = JsonConvert.SerializeObject(employees, settings);
+                return Ok(jsonResult);
             }
 
             return BadRequest(new ProblemDetails { Title = "OKTAY NURETTIN-HALİTLE KONUŞ DURUM VAHİM :( DB GG GALİBA KESBİŞ OLSUN" });
