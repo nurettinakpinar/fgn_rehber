@@ -69,11 +69,30 @@ const queries =
     delete: (url: string) => axios.delete(url).then((response: AxiosResponse) => response.data),
 }
 
+const Admin = {
+    list: () => queries.get("Admin"),
+    CalisanGuncelle: (id: number, formData: any) => queries.put(`Admin/calisanGuncelle/${id}`, formData),
+    YeniCalisanTalepOnayla: (id: number) => queries.post(`Admin/talep-onayla/${id}`, {}),
+    YeniCalisanTalepReddet: (id: number) => queries.post(`Admin/talep-reddet/${id}`, {}),
+}
+
 const Rehber = {
-    list: () => queries.get("Rehber"),
+    list: (searchTerm?: string, takimEnum?: number) => {
+        let queryParams = [];
+
+        if (searchTerm) {
+            queryParams.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
+        }
+
+        if (takimEnum !== undefined) {
+            queryParams.push(`takimEnum=${takimEnum}`);
+        }
+
+        const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+        return queries.get(`Rehber${queryString}`);
+    },
+    BilgileriGetir: () => queries.get(`Rehber/BilgileriGetir`),
     yeniTalepOlustur: (formData: any) => queries.post(`Rehber/talep-olustur`, formData),
-    YeniCalisanTalepOnayla: (id: number) => queries.post(`Rehber/talep-onayla/${id}`, {}),
-    YeniCalisanTalepReddet: (id: number) => queries.post(`Rehber/talep-reddet/${id}`, {}),
 }
 
 const Account = {
@@ -84,7 +103,8 @@ const Account = {
 
 const requests = {
     Rehber,
-    Account
+    Account,
+    Admin
 }
 
 export default requests

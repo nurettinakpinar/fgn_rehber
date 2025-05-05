@@ -24,30 +24,6 @@ export const fetchEmployees = createAsyncThunk<IEmployee[]>(
     }
 )
 
-export const yeniCalisanTalepOnayla = createAsyncThunk<IEmployee[], { CalisanId: number }>(
-    "employee/yeniCalisanTalepOnayla",
-    async ({ CalisanId }) => {
-        try {
-            return await requests.Rehber.YeniCalisanTalepOnayla(CalisanId);
-        }
-        catch (error: any) {
-            console.log(error);
-        }
-    }
-)
-
-export const yeniCalisanTalepReddet = createAsyncThunk<IEmployee[], { CalisanId: number }>(
-    "employee/yeniCalisanTalepReddet",
-    async ({ CalisanId }) => {
-        try {
-            return await requests.Rehber.YeniCalisanTalepReddet(CalisanId);
-        }
-        catch (error: any) {
-            console.log(error);
-        }
-    }
-)
-
 export const employeeSlice = createSlice({
     name: "employee",
     initialState,
@@ -68,27 +44,6 @@ export const employeeSlice = createSlice({
             state.status = "idle";
         });
 
-        builder.addCase(yeniCalisanTalepOnayla.pending, (state, action) => {
-            state.status = "pendingYeniCalisanTalepOnayla" + action.meta.arg.CalisanId;
-        });
-        builder.addCase(yeniCalisanTalepOnayla.fulfilled, (state, action) => {
-            employeeAdapter.setAll(state, action.payload);
-            state.status = "idle";
-        });
-        builder.addCase(yeniCalisanTalepOnayla.rejected, (state) => {
-            state.status = "idle";
-        });
-
-        builder.addCase(yeniCalisanTalepReddet.pending, (state, action) => {
-            state.status = "pendingYeniCalisanTalepReddet" + action.meta.arg.CalisanId;
-        });
-        builder.addCase(yeniCalisanTalepReddet.fulfilled, (state, action) => {
-            employeeAdapter.setAll(state, action.payload);
-            state.status = "idle";
-        });
-        builder.addCase(yeniCalisanTalepReddet.rejected, (state) => {
-            state.status = "idle";
-        });
     }
 });
 

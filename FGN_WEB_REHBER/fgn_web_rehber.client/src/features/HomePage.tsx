@@ -1,54 +1,106 @@
-﻿import { CircularProgress, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../redux/store";
-import { employeeSelector, fetchEmployees } from "../redux/employeeSlice";
-import { useEffect } from "react";
+﻿import { CircularProgress, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Stack } from "@mui/material";
+import { useEffect, useState } from "react";
+import { styled } from '@mui/material/styles';
+import { tableCellClasses } from '@mui/material/TableCell';
+import requests from "../api/requests"; // 📌 requests ile API çağıracağız
+import formatPhoneNumber from "../utils/formatter";
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+        backgroundColor: theme.palette.common.black,
+        color: theme.palette.common.white,
+    },
+    [`&.${tableCellClasses.body}`]: {
+        fontSize: 14,
+    },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    '&:nth-of-type(odd)': {
+        backgroundColor: theme.palette.action.hover,
+    },
+    '&:last-child td, &:last-child th': {
+        border: 0,
+    },
+}));
 
 function HomePage() {
-    const { status, isLoaded } = useAppSelector(state => state.employee);
-    const dispatch = useAppDispatch();
+    const [searchTerm, setSearchTerm] = useState("");   // Arama terimini saklamak için state
+    const [employees, setEmployees] = useState([]);     // Çalışan listesini saklamak için state
+    const [loading, setLoading] = useState(false);      // Yüklenme durumunu takip et
 
-    const employees = useAppSelector(employeeSelector.selectAll)
-
-    useEffect(() => {
-        if (!isLoaded) {
-            dispatch(fetchEmployees());
+    // 📌 API'den veriyi çekme fonksiyonu (Arama desteği ile)
+    async function fetchEmployees(search: string, takimEnum?: number) {
+        setLoading(true);
+        try {
+            const response = await requests.Rehber.list(search, takimEnum);
+            setEmployees(response);
+        } catch (error) {
+            console.error("Çalışanlar alınırken hata oluştu:", error);
         }
-    }, [isLoaded]);
+        setLoading(false);
+    }
+
+    // İlk sayfa yüklendiğinde tüm çalışanları getir
+    useEffect(() => {
+        fetchEmployees("");
+    }, []);
+
+    // nKullanıcı arama yaptıkça API çağrısı yap
+    function handleSearch(event: React.ChangeEvent<HTMLInputElement>) {
+        const value = event.target.value;
+        setSearchTerm(value);
+        fetchEmployees(value); // API'den güncellenmiş listeyi çek
+    }
+    function toTitleCase(str: string) {
+        return str
+            .toLocaleLowerCase('tr-TR')
+            .split(' ')
+            .map(word => word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1))
+            .join(' ');
+    }
 
     return (
         <>
-            {
-                status === "loading" ? (
-                    <CircularProgress />
-                ) : (
-                    <TableContainer component={Paper} >
-                        <Table sx={{ minWidth: 850 }} aria-label="simple table">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell></TableCell>
-                                    <TableCell>Ad Soyad</TableCell>
-                                    <TableCell>Birim</TableCell>
-                                    <TableCell align="center">Takım</TableCell>
-                                    <TableCell align="center">Dahili No</TableCell>
-                                    <TableCell align="center">İş Tel No</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                    {employees.map((item) => (item.TalepDurum === "ONAY" &&
-                                    <TableRow key={item.Id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                        <TableCell component="th" align="left">{item.Id}</TableCell>
-                                        <TableCell component="th" align="left">{item.AdSoyad}</TableCell>
-                                        <TableCell>{item.Birim}</TableCell>
-                                        <TableCell align="center">{item.Takim}</TableCell>
-                                        <TableCell align="center">{item.DahiliNo}</TableCell>
-                                        <TableCell align="center">{item.IsCepTelNo}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                )
-            }
+            <Stack spacing={2} sx={{ mb: 2 }}>
+                {/* Arama Çubuğu */}
+                <TextField
+                    label="Çalışan Ara"
+                    variant="outlined"
+                    fullWidth
+                    value={searchTerm}
+                    onChange={handleSearch}
+                />
+            </Stack>
+
+            {loading ? (
+                <CircularProgress />
+            ) : (
+                <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 850 }} aria-label="simple table">
+                        <TableHead>
+                            <TableRow>
+                                <StyledTableCell>Ad Soyad</StyledTableCell>
+                                <StyledTableCell>Birim</StyledTableCell>
+                                <StyledTableCell align="left">Takım</StyledTableCell>
+                                <StyledTableCell align="left">Dahili No</StyledTableCell>
+                                <StyledTableCell align="left">İş Tel No</StyledTableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {employees.map((item, index) => (
+                                <StyledTableRow key={index}>
+                                    <StyledTableCell component="th" align="left">{toTitleCase(item.AdSoyad)}</StyledTableCell>
+                                    <StyledTableCell>{item.Birim}</StyledTableCell>
+                                    <StyledTableCell align="left">{item.Takim}</StyledTableCell>
+                                    <StyledTableCell align="left">{item.DahiliNo}</StyledTableCell>
+                                    <StyledTableCell align="left">{formatPhoneNumber(item.IsCepTelNo)}</StyledTableCell>
+                                </StyledTableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
         </>
     );
 }
