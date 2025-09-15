@@ -21,20 +21,7 @@ namespace FGN_WEB_REHBER.Server.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetCalisanlar()
-        {
-            var employees = await _context.Employees.ToListAsync(); // Tüm çalışanları getiriyoruz
 
-            var settings = new JsonSerializerSettings
-            {
-                Formatting = Formatting.Indented,
-                Converters = new List<JsonConverter> { new StringEnumConverter() }
-            };
-
-            var jsonResult = JsonConvert.SerializeObject(employees, settings);
-            return Ok(jsonResult);
-        }
 
         [HttpPost("talep-onayla/{Id}")]
         public async Task<IActionResult> YeniCalisanTalepOnayla(int Id)
@@ -101,5 +88,10 @@ namespace FGN_WEB_REHBER.Server.Controllers
             return Ok(jsonResult);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetCalisanlar()
+        {
+            return await GetAllEmployeesAsJson();
+        }
     }
 }

@@ -3,14 +3,15 @@ import { IEmployee } from "../models/IEmployee";
 import requests from "../api/requests";
 import { RootState } from "./store";
 
-const employeeAdapter = createEntityAdapter<IEmployee>({
-    selectId: (employee: IEmployee) => employee.Id,
-});
+type EmployeeEntity = IEmployee & { id: number };
+const employeeAdapter = createEntityAdapter<EmployeeEntity>();
 
 const initialState = employeeAdapter.getInitialState({
     status: "idle",
     isLoaded: false
 });
+const toEntities = (arr: IEmployee[]): EmployeeEntity[] =>
+    (arr ?? []).map((e) => ({ ...e, id: e.Id }));
 
 export const fetchEmployees = createAsyncThunk<IEmployee[]>(
     "employee/fetchEmployees",
@@ -34,7 +35,7 @@ export const employeeSlice = createSlice({
         });
 
         builder.addCase(fetchEmployees.fulfilled, (state, action) => {
-            employeeAdapter.setAll(state, action.payload);
+            employeeAdapter.setAll(state, toEntities(action.payload) );
             state.status = "idle";
             state.isLoaded = true;
         });

@@ -1,30 +1,45 @@
-﻿import { AppBar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Menu, MenuItem, Stack, TextField, Toolbar, Typography, FormControl, InputLabel, Select, SelectChangeEvent, Grid2 } from "@mui/material";
+﻿import {
+    AppBar,
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Menu,
+    MenuItem,
+    Stack,
+    TextField,
+    Toolbar,
+    Typography,
+    FormControl,
+    InputLabel,
+    Select, Grid2,
+    SelectChangeEvent
+} from "@mui/material";
 import { Link, NavLink } from "react-router";
-import { useState, useEffect } from "react";
-import { KeyboardArrowDown, PersonAddOutlined, Phone } from "@mui/icons-material";
+import { useState } from "react";
+import { KeyboardArrowDown, PersonAddOutlined } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { logout } from "../redux/AccountSlice";
 import requests from "../api/requests";
-import 'react-international-phone/style.css';
+import "react-international-phone/style.css";
 import { PhoneInput } from "../features/customComponents/PhoneInput";
 
-const authLinks = [
-    { title: "Talep Oluştur", to: "/" },
-];
+const authLinks = [{ title: "Talep Oluştur", to: "/" }];
 
 const navStyles = {
     color: "inherit",
     textDecoration: "none",
     whiteSpace: "nowrap",
     "&:hover": {
-        color: "#A35632"
+        color: "#A35632",
     },
-};
+} as const;
 
 function Header() {
     const fgnLogo = "/fergani-light-logo.png";
-    const { user } = useAppSelector(state => state.account);
-    const [phone, setPhone] = useState('');
+    const { user } = useAppSelector((state) => state.account);
     const dispatch = useAppDispatch();
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -34,14 +49,18 @@ function Header() {
     const [formData, setFormData] = useState({
         Ad: "",
         Soyad: "",
-        Birim: 0,  // ID olarak tutulacak
-        Takim: 0,  // ID olarak tutulacak
+        Birim: 0, // ID olarak tutulacak
+        Takim: 0, // ID olarak tutulacak
         DahiliNo: "",
         IsCepTelNo: "",
     });
 
-    const [birimler, setBirimler] = useState<{ id: number; aciklama: string }[]>([]);
-    const [takimlar, setTakimlar] = useState<{ id: number; aciklama: string }[]>([]);
+    const [birimler, setBirimler] = useState<{ id: number; aciklama: string }[]>(
+        []
+    );
+    const [takimlar, setTakimlar] = useState<{ id: number; aciklama: string }[]>(
+        []
+    );
 
     function handleMenuClick(event: React.MouseEvent<HTMLButtonElement>) {
         setAnchorEl(event.currentTarget);
@@ -72,19 +91,18 @@ function Header() {
     }
 
     function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-        setFormData({
-            ...formData,
+        setFormData((prev) => ({
+            ...prev,
             [event.target.name]: event.target.value,
-        });
-        console.log(event.target.value);
+        }));
     }
 
     function handleSelectChange(event: SelectChangeEvent<number>) {
         const { name, value } = event.target;
-        setFormData({
-            ...formData,
+        setFormData((prev) => ({
+            ...prev,
             [name]: Number(value), // 📌 Enum ID olarak saklanıyor!
-        });
+        }));
     }
 
     async function handleSubmit() {
@@ -108,17 +126,37 @@ function Header() {
                         alt="logo"
                         style={{ width: "150px", height: "50px", objectFit: "contain" }}
                     />
-                    <Typography variant="h6" sx={{ mr: 2, cursor: "pointer", textDecoration: "none", color: "inherit" }} component={NavLink} to="/">
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            mr: 2,
+                            cursor: "pointer",
+                            textDecoration: "none",
+                            color: "inherit",
+                        }}
+                        component={NavLink}
+                        to="/"
+                    >
                         Fergani Rehber
                     </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                     {user ? (
                         <>
-                            <Button id="user-button" onClick={handleMenuClick} endIcon={<KeyboardArrowDown />} sx={navStyles}>
+                            <Button
+                                id="user-button"
+                                onClick={handleMenuClick}
+                                endIcon={<KeyboardArrowDown />}
+                                sx={navStyles}
+                            >
                                 {user.name}
                             </Button>
-                            <Menu id="user-menu" anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+                            <Menu
+                                id="user-menu"
+                                anchorEl={anchorEl}
+                                open={Boolean(anchorEl)}
+                                onClose={handleClose}
+                            >
                                 <MenuItem component={Link} to="/admin" onClick={handleClose}>
                                     Talepler
                                 </MenuItem>
@@ -134,7 +172,7 @@ function Header() {
                         </>
                     ) : (
                         <Stack direction="row">
-                            {authLinks.map(link => (
+                            {authLinks.map((link) => (
                                 <Button key={link.to} onClick={handleDialogOpen}>
                                     <PersonAddOutlined sx={{ color: "white" }} />
                                 </Button>
@@ -148,7 +186,7 @@ function Header() {
             <Dialog open={openDialog} onClose={handleDialogClose}>
                 <DialogTitle>Talep Oluştur</DialogTitle>
                 <DialogContent>
-                    <Grid2 size={{ xl: 9, lg: 8, md: 7, sm: 6, xs: 12 }} container spacing={2}>
+                    <Grid2 container sx={{ spacing: 2, xl: 9, lg: 8, md: 7, sm: 6, xs: 12 }} >
                         <TextField name="Ad" label="Ad" fullWidth onChange={handleInputChange} />
                         <TextField name="Soyad" label="Soyad" fullWidth onChange={handleInputChange} />
 
@@ -156,7 +194,7 @@ function Header() {
                         <FormControl fullWidth>
                             <InputLabel>Birim</InputLabel>
                             <Select name="Birim" value={formData.Birim} onChange={handleSelectChange}>
-                                {birimler.map(birim => (
+                                {birimler.map((birim) => (
                                     <MenuItem key={birim.id} value={birim.id}>
                                         {birim.aciklama}
                                     </MenuItem>
@@ -168,29 +206,34 @@ function Header() {
                         <FormControl fullWidth>
                             <InputLabel>Takım</InputLabel>
                             <Select name="Takim" value={formData.Takim} onChange={handleSelectChange}>
-                                {takimlar.map(takim => (
+                                {takimlar.map((takim) => (
                                     <MenuItem key={takim.id} value={takim.id}>
                                         {takim.aciklama}
                                     </MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
+
                         <Grid2 container spacing={2}>
-                            <Grid2 sx={{ xs: 6 }}>
+                            <Grid2 sx={{xs:12, sm:6}}>
                                 <PhoneInput
-                                    value={phone}
-                                    onChange={(phone) => setFormData(prev => ({ ...prev, IsCepTelNo: phone }))} />
+                                    value={formData.IsCepTelNo}
+                                    onChange={(val) =>
+                                        setFormData((prev) => ({ ...prev, IsCepTelNo: val }))
+                                    }
+                                    sx={{ mt: 1 }}
+                                />
                             </Grid2>
 
-                            <Grid2 sx={{ xs: 6 }}>
+                            <Grid2 sx={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     name="DahiliNo"
                                     label="Dahili No"
                                     fullWidth
-                                    onChange={handleInputChange} />
+                                    onChange={handleInputChange}
+                                />
                             </Grid2>
                         </Grid2>
-                        {/*<TextField name="IsCepTelNo" label="İş Cep Tel No" fullWidth onChange={handleInputChange} />*/}
                     </Grid2>
                 </DialogContent>
                 <DialogActions>

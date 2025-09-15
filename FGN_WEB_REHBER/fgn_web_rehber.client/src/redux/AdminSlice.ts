@@ -3,14 +3,17 @@ import { IEmployee } from "../models/IEmployee";
 import requests from "../api/requests";
 import { RootState } from "./store";
 
-const adminAdapter = createEntityAdapter<IEmployee>({
-    selectId: (employee: IEmployee) => employee.Id,
-});
+
+type EmployeeEntity = IEmployee & { id: number };
+const adminAdapter = createEntityAdapter<EmployeeEntity>();
 
 const initialState = adminAdapter.getInitialState({
     status: "idle",
     isLoaded: false
 });
+
+const toEntities = (arr: IEmployee[]): EmployeeEntity[] =>
+    (arr ?? []).map((e) => ({ ...e, id: e.Id }));
 
 export const fetchEmployees = createAsyncThunk<IEmployee[]>(
     "admin/fetchEmployees",
@@ -71,7 +74,7 @@ export const adminSlice = createSlice({
         });
 
         builder.addCase(fetchEmployees.fulfilled, (state, action) => {
-            adminAdapter.setAll(state, action.payload);
+            adminAdapter.setAll(state, toEntities(action.payload));
             state.status = "idle";
             state.isLoaded = true;
         });
@@ -85,7 +88,7 @@ export const adminSlice = createSlice({
             state.status = "pendingYeniCalisanTalepOnayla" + action.meta.arg.CalisanId;
         });
         builder.addCase(yeniCalisanTalepOnayla.fulfilled, (state, action) => {
-            adminAdapter.setAll(state, action.payload);
+            adminAdapter.setAll(state, toEntities(action.payload));
             state.status = "idle";
         });
         builder.addCase(yeniCalisanTalepOnayla.rejected, (state) => {
@@ -96,7 +99,7 @@ export const adminSlice = createSlice({
             state.status = "pendingYeniCalisanTalepReddet" + action.meta.arg.CalisanId;
         });
         builder.addCase(yeniCalisanTalepReddet.fulfilled, (state, action) => {
-            adminAdapter.setAll(state, action.payload);
+            adminAdapter.setAll(state, toEntities(action.payload));
             state.status = "idle";
         });
         builder.addCase(yeniCalisanTalepReddet.rejected, (state) => {
@@ -106,7 +109,7 @@ export const adminSlice = createSlice({
             state.status = "pendingCalisanGuncelle" + action.meta.arg.id;
         });
         builder.addCase(calisanGuncelle.fulfilled, (state, action) => {
-            adminAdapter.setAll(state, action.payload);
+            adminAdapter.setAll(state, toEntities(action.payload));
             state.status = "idle";
         });
         builder.addCase(calisanGuncelle.rejected, (state) => {

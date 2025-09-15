@@ -17,7 +17,7 @@ export default function App() {
     useEffect(() => {
 
         initApp().then(() => setLoading(false));
-
+        loading;
     }, []);
 
     return (

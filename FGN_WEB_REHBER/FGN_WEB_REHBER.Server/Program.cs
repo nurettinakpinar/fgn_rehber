@@ -93,7 +93,7 @@ namespace FGN_WEB_REHBER.Server
             // Make sure this origin matches the frontend running in development.
             app.UseCors(opt =>
             {
-                opt.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("https://localhost:50614");
+                opt.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("https://localhost:50614", "https://localhost:5000");
             });
             app.UseAuthorization();
 

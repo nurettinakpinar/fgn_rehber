@@ -1,49 +1,52 @@
-﻿import {
-    Box, Button, CircularProgress, Paper, Table, TableBody,
-    TableCell, TableContainer, TableHead, TableRow, Tabs, Tab,
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-    Grid2
-} from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../redux/store";
+﻿import { Box,Button,CircularProgress,Paper,Table,TableBody,TableCell,TableContainer,TableHead,TableRow,
+    Tabs,Tab,Dialog, DialogTitle,DialogContent, DialogActions,TextField,FormControl,InputLabel,MenuItem,Select, 
+    Grid} from "@mui/material";
 import { useEffect, useState } from "react";
 import { Check, Close, Edit } from "@mui/icons-material";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
 import {
     adminSelector,
     fetchEmployees,
     yeniCalisanTalepOnayla,
     yeniCalisanTalepReddet,
-    calisanGuncelle
+    calisanGuncelle,
 } from "../../redux/AdminSlice";
 import formatPhoneNumber from "../../utils/formatter";
 import requests from "../../api/requests";
 import { PhoneInput } from "../customComponents/PhoneInput";
+import { IEmployee } from "../../models/IEmployee";
+
+/** Sadece bu sayfa özelinde TalepDurum alanını genişletelim.
+ *  Uzun vadede backend kesin gönderiyorsa IEmployee içine ekleyebilirsiniz. */
+type TalepDurum = "BEKLEMEDE" | "RED" | "ONAY";
+type EmployeeRow = IEmployee & { TalepDurum?: TalepDurum };
+
+type IBirimTakimItem = { id: number; aciklama: string };
 
 function AdminPage() {
-    const { status, isLoaded } = useAppSelector(state => state.admin);
+    const { status, isLoaded } = useAppSelector((state) => state.admin);
     const dispatch = useAppDispatch();
-    const employees = useAppSelector(adminSelector.selectAll);
+
+    // Selector çıktısını tipliyoruz
+    const employees = useAppSelector(adminSelector.selectAll) as EmployeeRow[];
 
     const [tab, setTab] = useState(0); // 0: Bekleyen, 1: Reddedilen, 2: Tümü
     const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [editEmployee, setEditEmployee] = useState(null);
-    const [birimler, setBirimler] = useState<{ id: number; aciklama: string }[]>([]);
-    const [takimlar, setTakimlar] = useState<{ id: number; aciklama: string }[]>([]);
+    const [editEmployee, setEditEmployee] = useState<EmployeeRow | null>(null);
+    const [birimler, setBirimler] = useState<IBirimTakimItem[]>([]);
+    const [takimlar, setTakimlar] = useState<IBirimTakimItem[]>([]);
 
     useEffect(() => {
         if (!isLoaded) {
             dispatch(fetchEmployees());
         }
-    }, [isLoaded]);
+    }, [isLoaded, dispatch]);
 
-    const handleEditOpen = async (employee) => {
+    const handleEditOpen = async (employee: EmployeeRow) => {
         try {
             const response = await requests.Rehber.BilgileriGetir();
-            setBirimler(response.birim ?? []);
-            setTakimlar(response.takim ?? []);
+            setBirimler(response?.birim ?? []);
+            setTakimlar(response?.takim ?? []);
         } catch (error) {
             console.error("Birim/takım bilgileri getirilemedi:", error);
         }
@@ -52,54 +55,72 @@ function AdminPage() {
         setEditDialogOpen(true);
     };
 
-
     const handleEditClose = () => {
         setEditDialogOpen(false);
         setEditEmployee(null);
     };
 
     const handleEditSave = () => {
+        if (!editEmployee) return; // null guard
+
         const [ad, ...soyadArr] = editEmployee.AdSoyad.trim().split(" ");
         const soyad = soyadArr.join(" ");
 
-        dispatch(calisanGuncelle({
-            id: editEmployee.Id,
-            updated: {
-                Ad: ad,
-                Soyad: soyad,
-                Birim: editEmployee.Birim,
-                Takim: editEmployee.Takim,
-                DahiliNo: editEmployee.DahiliNo,
-                IsCepTelNo: editEmployee.IsCepTelNo,
-            }
-        }));
+        dispatch(
+            calisanGuncelle({
+                id: editEmployee.Id,
+                updated: {
+                    Ad: ad,
+                    Soyad: soyad,
+                    Birim: Number(editEmployee.Birim),  // güvenli olsun
+                    Takim: Number(editEmployee.Takim),
+                    DahiliNo: editEmployee.DahiliNo,
+                    IsCepTelNo: editEmployee.IsCepTelNo,
+                },
+            })
+        );
 
         handleEditClose();
     };
 
-    const filteredEmployees = employees.filter(emp => {
+    const filteredEmployees: EmployeeRow[] = employees.filter((emp) => {
         if (tab === 0) return emp.TalepDurum === "BEKLEMEDE";
         if (tab === 1) return emp.TalepDurum === "RED";
         return true;
     });
 
-    const renderButtons = (item: any) => {
+    const renderButtons = (item: EmployeeRow) => {
         const durum = item.TalepDurum;
 
         if (tab === 0) {
             // Onay Bekleyenler
             return (
                 <>
-                    <Button onClick={() => dispatch(yeniCalisanTalepOnayla({ CalisanId: item.Id }))}
-                        variant="outlined" color="success" sx={{ mr: 1 }}>
+                    <Button
+                        onClick={() =>
+                            dispatch(yeniCalisanTalepOnayla({ CalisanId: item.Id }))
+                        }
+                        variant="outlined"
+                        color="success"
+                        sx={{ mr: 1 }}
+                    >
                         <Check />
                     </Button>
-                    <Button onClick={() => dispatch(yeniCalisanTalepReddet({ CalisanId: item.Id }))}
-                        variant="outlined" color="error" sx={{ mr: 1 }}>
+                    <Button
+                        onClick={() =>
+                            dispatch(yeniCalisanTalepReddet({ CalisanId: item.Id }))
+                        }
+                        variant="outlined"
+                        color="error"
+                        sx={{ mr: 1 }}
+                    >
                         <Close />
                     </Button>
-                    <Button onClick={() => handleEditOpen(item)}
-                        variant="outlined" color="info">
+                    <Button
+                        onClick={() => handleEditOpen(item)}
+                        variant="outlined"
+                        color="info"
+                    >
                         <Edit />
                     </Button>
                 </>
@@ -110,12 +131,21 @@ function AdminPage() {
             // Reddedilenler
             return (
                 <>
-                    <Button onClick={() => dispatch(yeniCalisanTalepOnayla({ CalisanId: item.Id }))}
-                        variant="outlined" color="success" sx={{ mr: 1 }}>
+                    <Button
+                        onClick={() =>
+                            dispatch(yeniCalisanTalepOnayla({ CalisanId: item.Id }))
+                        }
+                        variant="outlined"
+                        color="success"
+                        sx={{ mr: 1 }}
+                    >
                         <Check />
                     </Button>
-                    <Button onClick={() => handleEditOpen(item)}
-                        variant="outlined" color="info">
+                    <Button
+                        onClick={() => handleEditOpen(item)}
+                        variant="outlined"
+                        color="info"
+                    >
                         <Edit />
                     </Button>
                 </>
@@ -126,12 +156,21 @@ function AdminPage() {
             if (durum === "ONAY") {
                 return (
                     <>
-                        <Button onClick={() => dispatch(yeniCalisanTalepReddet({ CalisanId: item.Id }))}
-                            variant="outlined" color="error" sx={{ mr: 1 }}>
+                        <Button
+                            onClick={() =>
+                                dispatch(yeniCalisanTalepReddet({ CalisanId: item.Id }))
+                            }
+                            variant="outlined"
+                            color="error"
+                            sx={{ mr: 1 }}
+                        >
                             <Close />
                         </Button>
-                        <Button onClick={() => handleEditOpen(item)}
-                            variant="outlined" color="info">
+                        <Button
+                            onClick={() => handleEditOpen(item)}
+                            variant="outlined"
+                            color="info"
+                        >
                             <Edit />
                         </Button>
                     </>
@@ -139,8 +178,11 @@ function AdminPage() {
             }
 
             return (
-                <Button onClick={() => handleEditOpen(item)}
-                    variant="outlined" color="info">
+                <Button
+                    onClick={() => handleEditOpen(item)}
+                    variant="outlined"
+                    color="info"
+                >
                     <Edit />
                 </Button>
             );
@@ -173,7 +215,7 @@ function AdminPage() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {filteredEmployees.map((item, index) => (
+                            {filteredEmployees.map((item: EmployeeRow, index: number) => (
                                 <TableRow key={index}>
                                     <TableCell>{item.AdSoyad}</TableCell>
                                     <TableCell>{item.Birim}</TableCell>
@@ -181,9 +223,7 @@ function AdminPage() {
                                     <TableCell>{item.DahiliNo}</TableCell>
                                     <TableCell>{formatPhoneNumber(item.IsCepTelNo)}</TableCell>
                                     <TableCell align="center">
-                                        <Box>
-                                            {renderButtons(item)}
-                                        </Box>
+                                        <Box>{renderButtons(item)}</Box>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -200,33 +240,52 @@ function AdminPage() {
                             label="Ad"
                             fullWidth
                             value={editEmployee.AdSoyad.split(" ")[0]}
-                            onChange={(e) => {
-                                const soyad = editEmployee.AdSoyad.split(" ").slice(1).join(" ");
-                                setEditEmployee({ ...editEmployee, AdSoyad: `${e.target.value} ${soyad}` });
-                            }}
+                            onChange={(e) =>
+                                setEditEmployee((prev) =>
+                                    prev
+                                        ? {
+                                            ...prev,
+                                            AdSoyad: `${e.target.value} ${prev.AdSoyad.split(" ").slice(1).join(" ")}`,
+                                        }
+                                        : prev
+                                )
+                            }
                             sx={{ mt: 2 }}
                         />
+
                         <TextField
                             label="Soyad"
                             fullWidth
                             value={editEmployee.AdSoyad.split(" ").slice(1).join(" ")}
-                            onChange={(e) => {
-                                const ad = editEmployee.AdSoyad.split(" ")[0];
-                                setEditEmployee({ ...editEmployee, AdSoyad: `${ad} ${e.target.value}` });
-                            }}
+                            onChange={(e) =>
+                                setEditEmployee((prev) =>
+                                    prev
+                                        ? {
+                                            ...prev,
+                                            AdSoyad: `${prev.AdSoyad.split(" ")[0]} ${e.target.value}`,
+                                        }
+                                        : prev
+                                )
+                            }
                             sx={{ mt: 2 }}
                         />
+
                         <FormControl fullWidth sx={{ mt: 2 }}>
                             <InputLabel>Birim</InputLabel>
                             <Select
                                 name="Birim"
-                                value={editEmployee.Birim}
+                                label="Birim"
+                                value={String(editEmployee.Birim)}
                                 onChange={(e) =>
-                                    setEditEmployee({ ...editEmployee, Birim: Number(e.target.value) })
+                                    setEditEmployee((prev) =>
+                                        prev
+                                            ? { ...prev, Birim: String(e.target.value) }
+                                            : prev
+                                    )
                                 }
                             >
                                 {birimler.map((b) => (
-                                    <MenuItem key={b.id} value={b.id}>
+                                    <MenuItem key={b.id} value={String(b.id)}>
                                         {b.aciklama}
                                     </MenuItem>
                                 ))}
@@ -237,45 +296,51 @@ function AdminPage() {
                             <InputLabel>Takım</InputLabel>
                             <Select
                                 name="Takim"
-                                value={editEmployee.Takim}
+                                label="Takım"
+                                value={String(editEmployee.Takim)}
                                 onChange={(e) =>
-                                    setEditEmployee({ ...editEmployee, Takim: Number(e.target.value) })
+                                    setEditEmployee((prev) =>
+                                        prev
+                                            ? { ...prev, Takim: String(e.target.value) }
+                                            : prev
+                                    )
                                 }
                             >
                                 {takimlar.map((t) => (
-                                    <MenuItem key={t.id} value={t.id}>
+                                    <MenuItem key={t.id} value={String(t.id)}>
                                         {t.aciklama}
                                     </MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
 
-                        <Grid2 container spacing={2}>
-                            <Grid2 sx={{ xs: 6 }}>
+                        <Grid container spacing={2}>
+                            <Grid xs={12} sm={6}>
                                 <PhoneInput
                                     value={editEmployee.IsCepTelNo}
                                     onChange={(phone) =>
-                                        setEditEmployee({ ...editEmployee, IsCepTelNo: phone })
+                                        setEditEmployee((prev) =>
+                                            prev ? { ...prev, IsCepTelNo: phone } : prev
+                                        )
                                     }
                                     sx={{ mt: 2 }}
                                 />
-                            </Grid2>
+                            </Grid>
 
-                            <Grid2 sx={{ xs: 6 }}>
+                            <Grid xs={12} sm={6}>
                                 <TextField
                                     label="Dahili No"
                                     fullWidth
                                     value={editEmployee.DahiliNo}
-                                    onChange={e =>
-                                        setEditEmployee({ ...editEmployee, DahiliNo: e.target.value })
+                                    onChange={(e) =>
+                                        setEditEmployee((prev) =>
+                                            prev ? { ...prev, DahiliNo: e.target.value } : prev
+                                        )
                                     }
                                     sx={{ mt: 2 }}
                                 />
-                            </Grid2>
-
-                        </Grid2>
-
-
+                            </Grid>
+                        </Grid>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleEditClose}>İptal</Button>

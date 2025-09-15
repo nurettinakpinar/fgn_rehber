@@ -3,7 +3,10 @@ import { router } from "../Router/Routes";
 import { toast } from "react-toastify";
 import { store } from "../redux/store";
 
-axios.defaults.baseURL = "https://localhost:7229/api/";
+axios.defaults.baseURL =  import.meta.env.PROD
+    ? `${window.location.origin}/api/` 
+    : "https://localhost:7229/api/";   
+
 axios.defaults.withCredentials = true;
 
 axios.interceptors.request.use(request => {
