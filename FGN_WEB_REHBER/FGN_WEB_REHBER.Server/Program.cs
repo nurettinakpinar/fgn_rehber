@@ -1,12 +1,12 @@
-﻿using System.Text;
-using FGN_WEB_REHBER.Server.Data;
-using FGN_WEB_REHBER.Server.Models.Entities;
+﻿using FGN_WEB_REHBER.Server.Data;
 using FGN_WEB_REHBER.Server.Middlewares;
+using FGN_WEB_REHBER.Server.Models.Entities;
 using FGN_WEB_REHBER.Server.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace FGN_WEB_REHBER.Server
 {
@@ -16,21 +16,17 @@ namespace FGN_WEB_REHBER.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // -------------------- DATABASE --------------------
             builder.Services.AddDbContext<DataContext>(options =>
             {
                 var config = builder.Configuration;
                 var connectionString = config.GetConnectionString("defaultConnection");
-
-                options.UseSqlite(connectionString);
+                options.UseSqlServer(connectionString);
             });
 
-            // Adds Identity services to the application for user authentication and role management.
-            // - `AppUser` represents the user entity (custom user model).
-            // - `AppRole` represents the role entity (custom role model).
-            // - `AddEntityFrameworkStores<DataContext>()` integrates Identity with Entity Framework Core, 
-            //   allowing Identity to use the `DataContext` database to store users and roles.
-            builder.Services.AddIdentity<AppUser, AppRole>().AddEntityFrameworkStores<DataContext>();
+            // -------------------- IDENTITY --------------------
+            builder.Services.AddIdentity<AppUser, AppRole>()
+                .AddEntityFrameworkStores<DataContext>();
 
             builder.Services.Configure<IdentityOptions>(options =>
             {
@@ -40,10 +36,12 @@ namespace FGN_WEB_REHBER.Server
                 options.Password.RequireUppercase = false;
                 options.Password.RequireDigit = false;
 
-                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+                options.User.AllowedUserNameCharacters =
+                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
                 options.User.RequireUniqueEmail = true;
             });
 
+            // -------------------- JWT AUTH --------------------
             builder.Services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -51,7 +49,7 @@ namespace FGN_WEB_REHBER.Server
 
             }).AddJwtBearer(x =>
             {
-                x.RequireHttpsMetadata = false;
+                x.RequireHttpsMetadata = false; // Docker için gerekli
                 x.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = false,
@@ -59,50 +57,71 @@ namespace FGN_WEB_REHBER.Server
                     ValidateAudience = false,
                     ValidAudience = "nurettin",
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWTSecurity:SecretKey"]!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.ASCII.GetBytes(builder.Configuration["JWTSecurity:SecretKey"]!)
+                    ),
                     ValidateLifetime = true,
                 };
             });
 
+            // -------------------- CONTROLLERS & SWAGGER --------------------
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddScoped<TokenService>();
 
+            // -------------------- CORS --------------------
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.WithOrigins("http://10.20.88.194:3000")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+            });
+
             var app = builder.Build();
 
+            // -------------------- MIDDLEWARE --------------------
             app.UseMiddleware<ExceptionHandling>();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            app.UseCors("AllowFrontend");
 
-            // CORS Configuration: 
-            // This allows requests from 'http://localhost:50614' (React frontend) to access this API.
-            // It permits any HTTP headers and any HTTP methods (GET, POST, PUT, DELETE, etc.).
-            // Make sure this origin matches the frontend running in development.
-            app.UseCors(opt =>
-            {
-                opt.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("https://localhost:50614", "https://localhost:5000");
-            });
+            app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 
+            // React SPA fallback
             app.MapFallbackToFile("/index.html");
 
-            SeedDatabase.Initialize(app);
+            // -------------------- DATABASE INIT --------------------
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+                try
+                {
+                    db.Database.Migrate();
+                    SeedDatabase.InitializeAsync(app);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Migration/Seed hatası: " + ex.Message);
+                }
+            }
+
 
             app.Run();
         }

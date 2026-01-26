@@ -3,9 +3,10 @@ import { router } from "../Router/Routes";
 import { toast } from "react-toastify";
 import { store } from "../redux/store";
 
-axios.defaults.baseURL =  import.meta.env.PROD
-    ? `${window.location.origin}/api/` 
-    : "https://localhost:7229/api/";   
+axios.defaults.baseURL = import.meta.env.PROD
+    ? import.meta.env.VITE_API_URL   // .env.production dosyasından oku
+    : "https://localhost:7229/api/";
+
 
 axios.defaults.withCredentials = true;
 
@@ -77,6 +78,10 @@ const Admin = {
     CalisanGuncelle: (id: number, formData: any) => queries.put(`Admin/calisanGuncelle/${id}`, formData),
     YeniCalisanTalepOnayla: (id: number) => queries.post(`Admin/talep-onayla/${id}`, {}),
     YeniCalisanTalepReddet: (id: number) => queries.post(`Admin/talep-reddet/${id}`, {}),
+    getBirimler: () => queries.get("Admin/birim"),
+    getTakimlar: () => queries.get("Admin/takim"),
+    birimEkle: (aciklama: string) => queries.post("Admin/birim", { aciklama } ),
+    takimEkle: (aciklama: string) => queries.post("Admin/takim", { aciklama }), 
 }
 
 const Rehber = {

@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_server
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourPassword123!
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks:
+      - appnet
+
+  api:
+    build:
+      context: ./FGN_WEB_REHBER.Server
+    container_name: dotnet_api
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mssql
+    networks:
+      - appnet
+
+  client:
+    build:
+      context: ./fgn_web_rehber.client
+    container_name: react_client
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge
+
+volumes:
+  mssql_data:

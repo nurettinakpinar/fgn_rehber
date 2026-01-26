@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Globalization;
+using System.Text.Json;
 
 namespace FGN_WEB_REHBER.Server.Controllers
 {
@@ -24,7 +25,7 @@ namespace FGN_WEB_REHBER.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCalisanlar(string? searchTerm, TakimEnum? takimEnum)
+        public async Task<IActionResult> GetCalisanlar(string? searchTerm, int? takimId)
         {
             var query = _context.Employees.AsQueryable();
 
@@ -34,55 +35,48 @@ namespace FGN_WEB_REHBER.Server.Controllers
                                          e.IsCepTelNo.Contains(searchTerm));
             }
 
-            if (takimEnum != null)
-            {
-                query = query.Where(e => e.Takim == takimEnum);
-            }
+            if (takimId != null)
+                query = query.Where(e => e.TakimId == takimId);
 
             query = query.Where(e => e.TalepDurum == TalepDurumEnum.ONAY);
 
-            var employees = await query.ToListAsync();
+            var employees = await query
+                 .Include(e => e.Takim)
+                 .Include(e => e.Birim)
+                 .Select(e => new
+                 {
+                     e.Id,
+                     e.AdSoyad,
+                     Birim = e.Birim.Aciklama,
+                     Takim = e.Takim.Aciklama,
+                     e.DahiliNo,
+                     e.IsCepTelNo
+                 })
+                 .ToListAsync();
 
-            var settings = new JsonSerializerSettings
+            return new JsonResult(employees, new JsonSerializerOptions
             {
-                Formatting = Formatting.Indented,
-                Converters = new List<JsonConverter> { new StringEnumConverter() }
-            };
+                PropertyNamingPolicy = null
+            });
 
-            var jsonResult = JsonConvert.SerializeObject(employees, settings);
-            return Ok(jsonResult);
         }
 
         [HttpGet("BilgileriGetir")]
         public async Task<IActionResult> BilgileriGetir()
         {
-            CultureInfo culture = new CultureInfo("tr-TR");
+            var birimler = await _context.Birimler
+                .Select(b => new { b.Id, b.Aciklama })
+                .ToListAsync();
 
-            var bilgiResponse = new BilgiResponse
+            var takimlar = await _context.Takimlar
+                .Select(t => new { t.Id, t.Aciklama })
+                .ToListAsync();
+
+            return Ok(new
             {
-                Birim = Enum.GetValues(typeof(BirimEnum))
-                .Cast<BirimEnum>()
-                .Select(e => new BilgiResponse.BilgInner
-                {
-                    id = (int)e,
-                    aciklama = e.GetEnumDescription()
-                }).ToList(),
-
-                Takim = Enum.GetValues(typeof(TakimEnum))
-                .Cast<TakimEnum>()
-                .Select(e => new BilgiResponse.BilgInner
-                {
-                    id = (int)e,
-                    aciklama = e.GetEnumDescription()
-                }).ToList()
-            };
-
-            if (bilgiResponse != null)
-            {
-                return Ok(bilgiResponse);
-
-            }
-            return BadRequest(new ProblemDetails { Title = "Talep oluşturulurken bir hata meydana geldi. BT ekibi ile ilteşime geçiniz." });
+                birimler = birimler,
+                takimlar = takimlar
+            });
         }
 
 
@@ -100,10 +94,10 @@ namespace FGN_WEB_REHBER.Server.Controllers
             var employee = new Employee
             {
                 AdSoyad = employeeDTO.Ad.ToLower() + " " + employeeDTO.Soyad.ToLower(),
-                Birim = (BirimEnum)employeeDTO.Birim, // Enum olarak atıyoruz
-                Takim = (TakimEnum)employeeDTO.Takim, // Enum olarak atıyoruz
-                DahiliNo = !string.IsNullOrWhiteSpace(employeeDTO.DahiliNo) ? employeeDTO.DahiliNo : "-",
-                IsCepTelNo = !string.IsNullOrWhiteSpace(employeeDTO.IsCepTelNo) ? employeeDTO.IsCepTelNo : "-"
+                BirimId = employeeDTO.BirimId,
+                TakimId = employeeDTO.TakimId,
+                DahiliNo = employeeDTO.DahiliNo ?? "-",
+                IsCepTelNo = employeeDTO.IsCepTelNo ?? "-"
             };
 
             _context.Employees.Add(employee);

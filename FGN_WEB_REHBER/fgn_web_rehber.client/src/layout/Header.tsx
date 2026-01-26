@@ -49,8 +49,8 @@ function Header() {
     const [formData, setFormData] = useState({
         Ad: "",
         Soyad: "",
-        Birim: 0, // ID olarak tutulacak
-        Takim: 0, // ID olarak tutulacak
+        BirimId: 0, // ID olarak tutulacak
+        TakimId: 0, // ID olarak tutulacak
         DahiliNo: "",
         IsCepTelNo: "",
     });
@@ -74,9 +74,16 @@ function Header() {
         try {
             const response = await requests.Rehber.BilgileriGetir();
             if (response) {
-                setBirimler(response.birim ?? []);
-                setTakimlar(response.takim ?? []);
+                setBirimler(response.birimler ?? []);
+                setTakimlar(response.takimlar ?? []);
             }
+
+            setFormData(prev => ({
+                ...prev,
+                BirimId: birimler[0]?.id ?? 0,
+                TakimId: takimlar[0]?.id ?? 0
+            }));
+
         } catch (error) {
             console.error("Bilgileri getirirken hata oluştu:", error);
             setBirimler([]);
@@ -186,14 +193,14 @@ function Header() {
             <Dialog open={openDialog} onClose={handleDialogClose}>
                 <DialogTitle>Talep Oluştur</DialogTitle>
                 <DialogContent>
-                    <Grid2 container sx={{ spacing: 2, xl: 9, lg: 8, md: 7, sm: 6, xs: 12 }} >
+                    <Grid2 container sx={{ xl: 9, lg: 8, md: 7, sm: 6, xs: 12 }} spacing={{ xs: 1, sm: 2, md: 3 }} >
                         <TextField name="Ad" label="Ad" fullWidth onChange={handleInputChange} />
                         <TextField name="Soyad" label="Soyad" fullWidth onChange={handleInputChange} />
 
                         {/* 📌 Birim Enum ID olarak gönderiliyor */}
                         <FormControl fullWidth>
                             <InputLabel>Birim</InputLabel>
-                            <Select name="Birim" value={formData.Birim} onChange={handleSelectChange}>
+                            <Select name="BirimId" value={formData.BirimId} onChange={handleSelectChange}>
                                 {birimler.map((birim) => (
                                     <MenuItem key={birim.id} value={birim.id}>
                                         {birim.aciklama}
@@ -205,7 +212,7 @@ function Header() {
                         {/* 📌 Takım Enum ID olarak gönderiliyor */}
                         <FormControl fullWidth>
                             <InputLabel>Takım</InputLabel>
-                            <Select name="Takim" value={formData.Takim} onChange={handleSelectChange}>
+                            <Select name="TakimId" value={formData.TakimId} onChange={handleSelectChange}>
                                 {takimlar.map((takim) => (
                                     <MenuItem key={takim.id} value={takim.id}>
                                         {takim.aciklama}
@@ -231,6 +238,7 @@ function Header() {
                                     label="Dahili No"
                                     fullWidth
                                     onChange={handleInputChange}
+                                    sx={{ mt: 1 }}
                                 />
                             </Grid2>
                         </Grid2>

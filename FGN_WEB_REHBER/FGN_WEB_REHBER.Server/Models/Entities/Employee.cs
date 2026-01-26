@@ -10,12 +10,16 @@ namespace FGN_WEB_REHBER.Server.Models.Entities
 
         [Required]
         public string AdSoyad { get; set; } = null!;
-        public BirimEnum Birim { get; set; }
-        public TakimEnum Takim { get; set; }
+        public int BirimId { get; set; }
+        public int TakimId { get; set; }
         public string? DahiliNo { get; set; } 
         public string? IsCepTelNo { get; set; }
         public bool Active { get; set; }
         public TalepDurumEnum TalepDurum { get; set; } = TalepDurumEnum.BEKLEMEDE;
+
+
+        public Department? Birim { get; set; }
+        public Team? Takim { get; set; }
 
     }
 }

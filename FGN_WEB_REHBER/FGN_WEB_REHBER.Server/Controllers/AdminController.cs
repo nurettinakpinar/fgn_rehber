@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System.Text.Json;
 
 namespace FGN_WEB_REHBER.Server.Controllers
 {
@@ -63,8 +64,8 @@ namespace FGN_WEB_REHBER.Server.Controllers
                 return NotFound("Çalışan Bulunamadı!");
 
             employee.AdSoyad = employeeDTO.Ad + " " + employeeDTO.Soyad;
-            employee.Birim = employeeDTO.Birim;
-            employee.Takim = employeeDTO.Takim;
+            employee.BirimId = employeeDTO.BirimId;
+            employee.TakimId = employeeDTO.TakimId;
             employee.DahiliNo = employeeDTO.DahiliNo;
             employee.IsCepTelNo = employeeDTO.IsCepTelNo;
             employee.TalepDurum = TalepDurumEnum.BEKLEMEDE;
@@ -78,14 +79,26 @@ namespace FGN_WEB_REHBER.Server.Controllers
 
         private async Task<IActionResult> GetAllEmployeesAsJson()
         {
-            var employees = await _context.Employees.ToListAsync();
-            var settings = new JsonSerializerSettings
+            var employees = await _context.Employees
+                                            .Include(e => e.Birim)
+                                            .Include(e => e.Takim)
+                                            .Select(e => new
+                                            {
+                                                Id = e.Id,
+                                                AdSoyad = e.AdSoyad,
+                                                BirimId = e.BirimId,
+                                                TakimId = e.TakimId,
+                                                Birim = e.Birim.Aciklama,
+                                                Takim = e.Takim.Aciklama,
+                                                DahiliNo = e.DahiliNo,
+                                                IsCepTelNo = e.IsCepTelNo,
+                                                Active = e.Active,
+                                                TalepDurum = e.TalepDurum.ToString()
+                                            }).ToListAsync();
+            return new JsonResult(employees, new JsonSerializerOptions
             {
-                Formatting = Formatting.Indented,
-                Converters = new List<JsonConverter> { new StringEnumConverter() }
-            };
-            var jsonResult = JsonConvert.SerializeObject(employees, settings);
-            return Ok(jsonResult);
+                PropertyNamingPolicy = null
+            });
         }
 
         [HttpGet]

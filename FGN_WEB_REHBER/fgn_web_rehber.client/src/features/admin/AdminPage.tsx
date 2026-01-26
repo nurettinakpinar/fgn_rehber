@@ -15,6 +15,7 @@ import formatPhoneNumber from "../../utils/formatter";
 import requests from "../../api/requests";
 import { PhoneInput } from "../customComponents/PhoneInput";
 import { IEmployee } from "../../models/IEmployee";
+import { BirimTakimAdmin } from "./BirimTakimAdmin";
 
 /** Sadece bu sayfa özelinde TalepDurum alanını genişletelim.
  *  Uzun vadede backend kesin gönderiyorsa IEmployee içine ekleyebilirsiniz. */
@@ -45,8 +46,8 @@ function AdminPage() {
     const handleEditOpen = async (employee: EmployeeRow) => {
         try {
             const response = await requests.Rehber.BilgileriGetir();
-            setBirimler(response?.birim ?? []);
-            setTakimlar(response?.takim ?? []);
+            setBirimler(response?.birimler ?? []);
+            setTakimlar(response?.takimlar ?? []);
         } catch (error) {
             console.error("Birim/takım bilgileri getirilemedi:", error);
         }
@@ -72,8 +73,8 @@ function AdminPage() {
                 updated: {
                     Ad: ad,
                     Soyad: soyad,
-                    Birim: Number(editEmployee.Birim),  // güvenli olsun
-                    Takim: Number(editEmployee.Takim),
+                    BirimId: Number(editEmployee.Birim),  // güvenli olsun
+                    TakimId: Number(editEmployee.Takim),
                     DahiliNo: editEmployee.DahiliNo,
                     IsCepTelNo: editEmployee.IsCepTelNo,
                 },
@@ -197,40 +198,49 @@ function AdminPage() {
                 <Tab label="Onay Bekleyenler" />
                 <Tab label="Reddedilenler" />
                 <Tab label="Tümü" />
+                <Tab label="Birim/Takım Güncelleme" />
             </Tabs>
-
-            {status === "loading" ? (
-                <CircularProgress />
+            {tab === 3 ? (
+                <BirimTakimAdmin />
             ) : (
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Ad Soyad</TableCell>
-                                <TableCell>Birim</TableCell>
-                                <TableCell>Takım</TableCell>
-                                <TableCell>Dahili No</TableCell>
-                                <TableCell>İş Tel No</TableCell>
-                                <TableCell align="center">İşlem</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filteredEmployees.map((item: EmployeeRow, index: number) => (
-                                <TableRow key={index}>
-                                    <TableCell>{item.AdSoyad}</TableCell>
-                                    <TableCell>{item.Birim}</TableCell>
-                                    <TableCell>{item.Takim}</TableCell>
-                                    <TableCell>{item.DahiliNo}</TableCell>
-                                    <TableCell>{formatPhoneNumber(item.IsCepTelNo)}</TableCell>
-                                    <TableCell align="center">
-                                        <Box>{renderButtons(item)}</Box>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                <>
+                    {status === "loading" ? (
+                        <CircularProgress />
+                    ) : (
+                        <TableContainer component={Paper}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Ad Soyad</TableCell>
+                                        <TableCell>Birim</TableCell>
+                                        <TableCell>Takım</TableCell>
+                                        <TableCell>Dahili No</TableCell>
+                                        <TableCell>İş Tel No</TableCell>
+                                        <TableCell align="center">İşlem</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {filteredEmployees.map((item, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{item.AdSoyad}</TableCell>
+                                            <TableCell>{item.Birim}</TableCell>
+                                            <TableCell>{item.Takim}</TableCell>
+                                            <TableCell>{item.DahiliNo}</TableCell>
+                                            <TableCell>
+                                                {formatPhoneNumber(item.IsCepTelNo)}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Box>{renderButtons(item)}</Box>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+                </>
             )}
+
 
             {editEmployee && (
                 <Dialog open={editDialogOpen} onClose={handleEditClose}>
