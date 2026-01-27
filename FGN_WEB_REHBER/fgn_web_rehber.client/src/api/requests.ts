@@ -93,7 +93,7 @@ const Rehber = {
         }
 
         if (takimEnum !== undefined) {
-            queryParams.push(`takimEnum=${takimEnum}`);
+            queryParams.push(`takimId=${takimEnum}`);
         }
 
         const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";

@@ -194,13 +194,20 @@ function Header() {
                 <DialogTitle>Talep Oluştur</DialogTitle>
                 <DialogContent>
                     <Grid2 container sx={{ xl: 9, lg: 8, md: 7, sm: 6, xs: 12 }} spacing={{ xs: 1, sm: 2, md: 3 }} >
-                        <TextField name="Ad" label="Ad" fullWidth onChange={handleInputChange} />
+                        <TextField name="Ad" label="Ad" fullWidth onChange={handleInputChange} sx={{ mt:5 }} />
                         <TextField name="Soyad" label="Soyad" fullWidth onChange={handleInputChange} />
 
                         {/* 📌 Birim Enum ID olarak gönderiliyor */}
-                        <FormControl fullWidth>
-                            <InputLabel>Birim</InputLabel>
-                            <Select name="BirimId" value={formData.BirimId} onChange={handleSelectChange}>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel id="birim-label">Birim</InputLabel>
+                            <Select
+                                labelId="birim-label"
+                                id="birim"
+                                name="BirimId"
+                                value={formData.BirimId}
+                                onChange={handleSelectChange}
+                                label="Birim"
+                            >
                                 {birimler.map((birim) => (
                                     <MenuItem key={birim.id} value={birim.id}>
                                         {birim.aciklama}
@@ -210,9 +217,16 @@ function Header() {
                         </FormControl>
 
                         {/* 📌 Takım Enum ID olarak gönderiliyor */}
-                        <FormControl fullWidth>
-                            <InputLabel>Takım</InputLabel>
-                            <Select name="TakimId" value={formData.TakimId} onChange={handleSelectChange}>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel id="takim-label">Takım</InputLabel>
+                            <Select
+                                labelId="takim-label"
+                                id="takim"
+                                name="TakimId"
+                                value={formData.TakimId}
+                                onChange={handleSelectChange}
+                                label="Takım"
+                            >
                                 {takimlar.map((takim) => (
                                     <MenuItem key={takim.id} value={takim.id}>
                                         {takim.aciklama}

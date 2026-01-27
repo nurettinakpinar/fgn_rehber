@@ -29,10 +29,20 @@ namespace FGN_WEB_REHBER.Server.Controllers
         {
             var query = _context.Employees.AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            //if (!string.IsNullOrEmpty(searchTerm))
+            //{
+            //    query = query.Where(e => e.AdSoyad.ToLower().Contains(searchTerm.ToLower()) ||
+            //                             e.IsCepTelNo.Contains(searchTerm));
+            //}
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(e => e.AdSoyad.ToLower().Contains(searchTerm.ToLower()) ||
-                                         e.IsCepTelNo.Contains(searchTerm));
+                var term = searchTerm.Trim();
+
+                query = query.Where(e =>
+                    EF.Functions.Collate(e.AdSoyad, "Turkish_CI_AS").Contains(term) ||
+                    e.IsCepTelNo.Contains(term)
+                );
             }
 
             if (takimId != null)
