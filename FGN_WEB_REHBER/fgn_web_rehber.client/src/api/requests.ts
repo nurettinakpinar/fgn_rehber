@@ -78,10 +78,17 @@ const Admin = {
     CalisanGuncelle: (id: number, formData: any) => queries.put(`Admin/calisanGuncelle/${id}`, formData),
     YeniCalisanTalepOnayla: (id: number) => queries.post(`Admin/talep-onayla/${id}`, {}),
     YeniCalisanTalepReddet: (id: number) => queries.post(`Admin/talep-reddet/${id}`, {}),
+
+    // --- Birim ---
     getBirimler: () => queries.get("Admin/birim"),
+    birimEkle: (aciklama: string) => queries.post("Admin/birim", { aciklama }),
+    birimAciklamaGuncelle: (id: number, aciklama: string) => queries.put(`Admin/birim/${id}/aciklama`, { aciklama }),
+    birimActiveGuncelle: (id: number, active: boolean) => queries.put(`Admin/birim/${id}/active`, { active }),
+    // --- Takim ---
     getTakimlar: () => queries.get("Admin/takim"),
-    birimEkle: (aciklama: string) => queries.post("Admin/birim", { aciklama } ),
-    takimEkle: (aciklama: string) => queries.post("Admin/takim", { aciklama }), 
+    takimEkle: (aciklama: string) => queries.post("Admin/takim", { aciklama }),
+    takimAciklamaGuncelle: (id: number, aciklama: string) => queries.put(`Admin/takim/${id}/aciklama`, { aciklama }),
+    takimActiveGuncelle: (id: number, active: boolean) => queries.put(`Admin/takim/${id}/active`, { active }),
 }
 
 const Rehber = {

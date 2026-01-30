@@ -44,13 +44,25 @@ namespace FGN_WEB_REHBER.Server.Controllers
             return Ok(takim);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}/aciklama")]
         public async Task<IActionResult> Update(int id, [FromBody] CreateBirimTakimDto dto)
         {
             var takim = await _context.Takimlar.FindAsync(id);
             if (takim == null) return NotFound();
 
             takim.Aciklama = dto.aciklama;
+            await _context.SaveChangesAsync();
+
+            return Ok(takim);
+        }
+
+        [HttpPut("{id}/active")]
+        public async Task<IActionResult> Update_active(int id, [FromBody] UpdateActiveDto dto)
+        {
+            var takim = await _context.Takimlar.FindAsync(id);
+            if (takim == null) return NotFound();
+
+            takim.Active = dto.active;
             await _context.SaveChangesAsync();
 
             return Ok(takim);

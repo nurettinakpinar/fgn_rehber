@@ -12,7 +12,7 @@
     <PackageJsonDependenciesEmotionReact Condition="$(PackageJsonDependenciesEmotionReact) == ''">^11.14.0</PackageJsonDependenciesEmotionReact>
     <PackageJsonDependenciesEmotionStyled Condition="$(PackageJsonDependenciesEmotionStyled) == ''">^11.14.0</PackageJsonDependenciesEmotionStyled>
     <PackageJsonDependenciesFontsourceRoboto Condition="$(PackageJsonDependenciesFontsourceRoboto) == ''">^5.2.5</PackageJsonDependenciesFontsourceRoboto>
-    <PackageJsonDependenciesMuiIconsMaterial Condition="$(PackageJsonDependenciesMuiIconsMaterial) == ''">^6.4.7</PackageJsonDependenciesMuiIconsMaterial>
+    <PackageJsonDependenciesMuiIconsMaterial Condition="$(PackageJsonDependenciesMuiIconsMaterial) == ''">^6.5.0</PackageJsonDependenciesMuiIconsMaterial>
     <PackageJsonDependenciesMuiMaterial Condition="$(PackageJsonDependenciesMuiMaterial) == ''">^6.4.7</PackageJsonDependenciesMuiMaterial>
     <PackageJsonDependenciesReduxjsToolkit Condition="$(PackageJsonDependenciesReduxjsToolkit) == ''">^2.6.1</PackageJsonDependenciesReduxjsToolkit>
     <PackageJsonDependenciesAxios Condition="$(PackageJsonDependenciesAxios) == ''">^1.8.2</PackageJsonDependenciesAxios>

@@ -48,7 +48,7 @@ namespace FGN_WEB_REHBER.Server.Controllers
             if (takimId != null)
                 query = query.Where(e => e.TakimId == takimId);
 
-            query = query.Where(e => e.TalepDurum == TalepDurumEnum.ONAY);
+            query = query.Where(e => e.TalepDurum == TalepDurumEnum.ONAY && e.Birim.Active == true && e.Takim.Active == true);
 
             var employees = await query
                  .Include(e => e.Takim)
@@ -75,11 +75,13 @@ namespace FGN_WEB_REHBER.Server.Controllers
         public async Task<IActionResult> BilgileriGetir()
         {
             var birimler = await _context.Birimler
-                .Select(b => new { b.Id, b.Aciklama })
+                .Select(b => new { b.Id, b.Aciklama, b.Active })
+                .Where(b => b.Active == true)
                 .ToListAsync();
 
             var takimlar = await _context.Takimlar
-                .Select(t => new { t.Id, t.Aciklama })
+                .Select(t => new { t.Id, t.Aciklama, t.Active })
+                .Where(t => t.Active == true)
                 .ToListAsync();
 
             return Ok(new

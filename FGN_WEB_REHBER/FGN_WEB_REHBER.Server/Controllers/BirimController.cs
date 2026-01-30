@@ -44,13 +44,25 @@ namespace FGN_WEB_REHBER.Server.Controllers
             return Ok(birim);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}/aciklama")]
         public async Task<IActionResult> Update(int id, [FromBody] CreateBirimTakimDto dto)
         {
             var birim = await _context.Birimler.FindAsync(id);
             if (birim == null) return NotFound();
 
             birim.Aciklama = dto.aciklama;
+            await _context.SaveChangesAsync();
+
+            return Ok(birim);
+        }
+
+        [HttpPut("{id}/active")]
+        public async Task<IActionResult> Update_active(int id, [FromBody] UpdateActiveDto dto)
+        {
+            var birim = await _context.Birimler.FindAsync(id);
+            if (birim == null) return NotFound();
+
+            birim.Active = dto.active;
             await _context.SaveChangesAsync();
 
             return Ok(birim);
