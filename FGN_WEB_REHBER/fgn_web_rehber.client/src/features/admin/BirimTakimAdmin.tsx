@@ -87,7 +87,6 @@ export function BirimTakimAdmin() {
     const saveBirim = async (id: number) => {
         const value = (editBirim[id] ?? "").trim();
         if (!value) return;
-        // ✅ doğru fonksiyon adı
         await requests.Admin.birimAciklamaGuncelle(id, value);
         cancelEditBirim(id);
         loadData();
@@ -112,7 +111,6 @@ export function BirimTakimAdmin() {
     const saveTakim = async (id: number) => {
         const value = (editTakim[id] ?? "").trim();
         if (!value) return;
-        // ✅ doğru fonksiyon adı
         await requests.Admin.takimAciklamaGuncelle(id, value);
         cancelEditTakim(id);
         loadData();

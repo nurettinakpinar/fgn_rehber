@@ -17,8 +17,7 @@ import { PhoneInput } from "../customComponents/PhoneInput";
 import { IEmployee } from "../../models/IEmployee";
 import { BirimTakimAdmin } from "./BirimTakimAdmin";
 
-/** Sadece bu sayfa özelinde TalepDurum alanını genişletelim.
- *  Uzun vadede backend kesin gönderiyorsa IEmployee içine ekleyebilirsiniz. */
+
 type TalepDurum = "BEKLEMEDE" | "RED" | "ONAY";
 type EmployeeRow = IEmployee & { TalepDurum?: TalepDurum };
 
