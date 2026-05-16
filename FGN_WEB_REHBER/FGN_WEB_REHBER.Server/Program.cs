@@ -1,4 +1,4 @@
-﻿using FGN_WEB_REHBER.Server.Data;
+using FGN_WEB_REHBER.Server.Data;
 using FGN_WEB_REHBER.Server.Middlewares;
 using FGN_WEB_REHBER.Server.Models.Entities;
 using FGN_WEB_REHBER.Server.Services;
@@ -72,11 +72,14 @@ namespace FGN_WEB_REHBER.Server
             builder.Services.AddScoped<TokenService>();
 
             // -------------------- CORS --------------------
+            var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"] ?? "http://localhost:3000";
+            var origins = allowedOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://10.20.88.194:3000")
+                    policy.WithOrigins(origins)
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials();

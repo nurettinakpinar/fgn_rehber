@@ -20,6 +20,10 @@ services:
     container_name: dotnet_api
     environment:
       - ASPNETCORE_URLS=http://+:8080
+      # CORS: Hangi adresten frontend açılıyorsa onu ekleyin (virgülle ayırarak birden fazla yazılabilir).
+      # Örnek: http://localhost:3000 veya http://192.168.1.100:3000
+      # Hem localhost hem de IP adresinden erişim için her ikisini de ekleyin
+      - Cors__AllowedOrigins=http://localhost:3000,http://10.20.88.194:3000
     ports:
       - "8080:8080"
     depends_on:
