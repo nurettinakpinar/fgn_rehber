@@ -42,9 +42,9 @@ public static class SeedDatabase
         {
             var admin = new AppUser
             {
-                Name = "Nurettin AKPINAR",
-                UserName = "nurettinakpinar",
-                Email = "nurettinakpinar1@hotmail.com"
+                Name = "Oktay Saraçoğlu",
+                UserName = "oktaysaracoglu",
+                Email = "oktay.saracoglu@ferganiuzay.com"
             };
 
             var result = await userManager.CreateAsync(admin, "Admin123.");
@@ -57,7 +57,7 @@ public static class SeedDatabase
             }
             else
             {
-                Console.WriteLine("✔ USER OLUŞTURULDU: nurettinakpinar1@hotmail.com");
+                Console.WriteLine("✔ USER OLUŞTURULDU: oktay.saracoglu@ferganiuzay.com");
 
                 var roleAssignResult = await userManager.AddToRoleAsync(admin, "Admin");
 
@@ -78,11 +78,7 @@ public static class SeedDatabase
         if (!await context.Takimlar.AnyAsync())
         {
             context.Takimlar.AddRange(
-                new Team { Aciklama = "Yazılım Teknolojileri", Active = true },
-                new Team { Aciklama = "Kontrol Güdüm ve Seyrüsefer", Active = true },
-                new Team { Aciklama = "Sistem", Active = true },
-                new Team { Aciklama = "Donanım", Active = true },
-                new Team { Aciklama = "Mekanik", Active = true }
+                new Team { Aciklama = "Yazılım Teknolojileri", Active = true }
             );
         }
 

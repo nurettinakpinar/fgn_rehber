@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { store } from "../redux/store";
 
 axios.defaults.baseURL = import.meta.env.PROD
-    ? import.meta.env.VITE_API_URL   // .env.production dosyasından oku
+    ? "/api/"                        // Nginx /api/ → dotnet_api:8080 proxy eder
     : "https://localhost:7229/api/";
 
 

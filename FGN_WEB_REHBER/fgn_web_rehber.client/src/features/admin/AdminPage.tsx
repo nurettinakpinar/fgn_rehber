@@ -1,6 +1,5 @@
-﻿import { Box,Button,CircularProgress,Paper,Table,TableBody,TableCell,TableContainer,TableHead,TableRow,
-    Tabs,Tab,Dialog, DialogTitle,DialogContent, DialogActions,TextField,FormControl,InputLabel,MenuItem,Select, 
-    Grid} from "@mui/material";
+﻿import { Box,Button,CircularProgress,Divider,Grid2,Paper,Stack,Table,TableBody,TableCell,TableContainer,TableHead,TableRow,
+    Tabs,Tab,Dialog, DialogTitle,DialogContent, DialogActions,TextField,FormControl,InputLabel,MenuItem,Select,Typography} from "@mui/material";
 import { useEffect, useState } from "react";
 import { Check, Close, Edit } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../redux/store";
@@ -242,118 +241,122 @@ function AdminPage() {
 
 
             {editEmployee && (
-                <Dialog open={editDialogOpen} onClose={handleEditClose}>
-                    <DialogTitle>Çalışan Düzenle</DialogTitle>
+                <Dialog open={editDialogOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>
+                    <DialogTitle sx={{ pb: 1 }}>
+                        <Typography variant="h6" fontWeight={700}>Çalışan Düzenle</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {editEmployee.AdSoyad}
+                        </Typography>
+                    </DialogTitle>
+                    <Divider />
                     <DialogContent>
-                        <TextField
-                            label="Ad"
-                            fullWidth
-                            value={editEmployee.AdSoyad.split(" ")[0]}
-                            onChange={(e) =>
-                                setEditEmployee((prev) =>
-                                    prev
-                                        ? {
-                                            ...prev,
-                                            AdSoyad: `${e.target.value} ${prev.AdSoyad.split(" ").slice(1).join(" ")}`,
-                                        }
-                                        : prev
-                                )
-                            }
-                            sx={{ mt: 2 }}
-                        />
-
-                        <TextField
-                            label="Soyad"
-                            fullWidth
-                            value={editEmployee.AdSoyad.split(" ").slice(1).join(" ")}
-                            onChange={(e) =>
-                                setEditEmployee((prev) =>
-                                    prev
-                                        ? {
-                                            ...prev,
-                                            AdSoyad: `${prev.AdSoyad.split(" ")[0]} ${e.target.value}`,
-                                        }
-                                        : prev
-                                )
-                            }
-                            sx={{ mt: 2 }}
-                        />
-
-                        <FormControl fullWidth sx={{ mt: 2 }}>
-                            <InputLabel>Birim</InputLabel>
-                            <Select
-                                name="Birim"
-                                label="Birim"
-                                value={String(editEmployee.Birim)}
-                                onChange={(e) =>
-                                    setEditEmployee((prev) =>
-                                        prev
-                                            ? { ...prev, Birim: String(e.target.value) }
-                                            : prev
-                                    )
-                                }
-                            >
-                                {birimler.map((b) => (
-                                    <MenuItem key={b.id} value={String(b.id)}>
-                                        {b.aciklama}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth sx={{ mt: 2 }}>
-                            <InputLabel>Takım</InputLabel>
-                            <Select
-                                name="Takim"
-                                label="Takım"
-                                value={String(editEmployee.Takim)}
-                                onChange={(e) =>
-                                    setEditEmployee((prev) =>
-                                        prev
-                                            ? { ...prev, Takim: String(e.target.value) }
-                                            : prev
-                                    )
-                                }
-                            >
-                                {takimlar.map((t) => (
-                                    <MenuItem key={t.id} value={String(t.id)}>
-                                        {t.aciklama}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <Grid container spacing={2}>
-                            <Grid xs={12} sm={6}>
-                                <PhoneInput
-                                    value={editEmployee.IsCepTelNo}
-                                    onChange={(phone) =>
-                                        setEditEmployee((prev) =>
-                                            prev ? { ...prev, IsCepTelNo: phone } : prev
-                                        )
-                                    }
-                                    sx={{ mt: 2 }}
-                                />
-                            </Grid>
-
-                            <Grid xs={12} sm={6}>
+                        <Stack spacing={2} sx={{ pt: 1 }}>
+                            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                                 <TextField
-                                    label="Dahili No"
+                                    label="Ad"
                                     fullWidth
-                                    value={editEmployee.DahiliNo}
+                                    value={editEmployee.AdSoyad.split(" ")[0]}
                                     onChange={(e) =>
                                         setEditEmployee((prev) =>
-                                            prev ? { ...prev, DahiliNo: e.target.value } : prev
+                                            prev
+                                                ? {
+                                                    ...prev,
+                                                    AdSoyad: `${e.target.value} ${prev.AdSoyad.split(" ").slice(1).join(" ")}`,
+                                                }
+                                                : prev
                                         )
                                     }
-                                    sx={{ mt: 2 }}
                                 />
-                            </Grid>
-                        </Grid>
+                                <TextField
+                                    label="Soyad"
+                                    fullWidth
+                                    value={editEmployee.AdSoyad.split(" ").slice(1).join(" ")}
+                                    onChange={(e) =>
+                                        setEditEmployee((prev) =>
+                                            prev
+                                                ? {
+                                                    ...prev,
+                                                    AdSoyad: `${prev.AdSoyad.split(" ")[0]} ${e.target.value}`,
+                                                }
+                                                : prev
+                                        )
+                                    }
+                                />
+                            </Stack>
+
+                            <FormControl fullWidth size="small">
+                                <InputLabel>Birim</InputLabel>
+                                <Select
+                                    name="Birim"
+                                    label="Birim"
+                                    value={String(editEmployee.Birim)}
+                                    onChange={(e) =>
+                                        setEditEmployee((prev) =>
+                                            prev ? { ...prev, Birim: String(e.target.value) } : prev
+                                        )
+                                    }
+                                >
+                                    {birimler.map((b) => (
+                                        <MenuItem key={b.id} value={String(b.id)}>
+                                            {b.aciklama}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth size="small">
+                                <InputLabel>Takım</InputLabel>
+                                <Select
+                                    name="Takim"
+                                    label="Takım"
+                                    value={String(editEmployee.Takim)}
+                                    onChange={(e) =>
+                                        setEditEmployee((prev) =>
+                                            prev ? { ...prev, Takim: String(e.target.value) } : prev
+                                        )
+                                    }
+                                >
+                                    {takimlar.map((t) => (
+                                        <MenuItem key={t.id} value={String(t.id)}>
+                                            {t.aciklama}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <Grid2 container spacing={2}>
+                                <Grid2 size={{ xs: 12, sm: 8 }}>
+                                    <PhoneInput
+                                        value={editEmployee.IsCepTelNo}
+                                        onChange={(phone) =>
+                                            setEditEmployee((prev) =>
+                                                prev ? { ...prev, IsCepTelNo: phone } : prev
+                                            )
+                                        }
+                                        fullWidth
+                                    />
+                                </Grid2>
+                                <Grid2 size={{ xs: 12, sm: 4 }}>
+                                    <TextField
+                                        label="Dahili No"
+                                        fullWidth
+                                        value={editEmployee.DahiliNo}
+                                        onChange={(e) =>
+                                            setEditEmployee((prev) =>
+                                                prev ? { ...prev, DahiliNo: e.target.value } : prev
+                                            )
+                                        }
+                                    />
+                                </Grid2>
+                            </Grid2>
+                        </Stack>
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleEditClose}>İptal</Button>
-                        <Button onClick={handleEditSave} color="primary">
+                    <Divider />
+                    <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+                        <Button onClick={handleEditClose} variant="outlined" color="inherit">
+                            İptal
+                        </Button>
+                        <Button onClick={handleEditSave} variant="contained" color="primary">
                             Kaydet
                         </Button>
                     </DialogActions>

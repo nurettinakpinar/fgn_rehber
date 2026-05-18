@@ -135,11 +135,11 @@ export function BirimTakimAdmin() {
                 {/* ----------- BIRIMLER CARD ----------- */}
                 <Card sx={{ flex: 1 }}>
                     <CardHeader
-                        title="Birimler"
+                        title={<Typography variant="h6" fontWeight={700}>Birimler</Typography>}
                         subheader={
                             <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
-                                <Chip size="small" label={`Toplam: ${birimStats.total}`} />
-                                <Chip size="small" label={`Aktif: ${birimStats.active}`} />
+                                <Chip size="small" label={`Toplam: ${birimStats.total}`} color="default" />
+                                <Chip size="small" label={`Aktif: ${birimStats.active}`} color="primary" />
                                 <Chip size="small" label={`Pasif: ${birimStats.passive}`} variant="outlined" />
                             </Stack>
                         }
@@ -241,11 +241,11 @@ export function BirimTakimAdmin() {
                 {/* ----------- TAKIMLAR CARD ----------- */}
                 <Card sx={{ flex: 1 }}>
                     <CardHeader
-                        title="Takımlar"
+                        title={<Typography variant="h6" fontWeight={700}>Takımlar</Typography>}
                         subheader={
                             <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
-                                <Chip size="small" label={`Toplam: ${takimStats.total}`} />
-                                <Chip size="small" label={`Aktif: ${takimStats.active}`} />
+                                <Chip size="small" label={`Toplam: ${takimStats.total}`} color="default" />
+                                <Chip size="small" label={`Aktif: ${takimStats.active}`} color="primary" />
                                 <Chip size="small" label={`Pasif: ${takimStats.passive}`} variant="outlined" />
                             </Stack>
                         }

@@ -1,4 +1,4 @@
-﻿import {
+import {
     AppBar,
     Box,
     Button,
@@ -6,6 +6,8 @@
     DialogActions,
     DialogContent,
     DialogTitle,
+    Divider,
+    Grid2,
     Menu,
     MenuItem,
     Stack,
@@ -14,8 +16,8 @@
     Typography,
     FormControl,
     InputLabel,
-    Select, Grid2,
-    SelectChangeEvent
+    Select,
+    SelectChangeEvent,
 } from "@mui/material";
 import { Link, NavLink } from "react-router";
 import { useState } from "react";
@@ -45,22 +47,17 @@ function Header() {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [openDialog, setOpenDialog] = useState(false);
 
-    // 📌 ENUM ID'leri burada tutuluyor!
     const [formData, setFormData] = useState({
         Ad: "",
         Soyad: "",
-        BirimId: 0, // ID olarak tutulacak
-        TakimId: 0, // ID olarak tutulacak
+        BirimId: 0,
+        TakimId: 0,
         DahiliNo: "",
         IsCepTelNo: "",
     });
 
-    const [birimler, setBirimler] = useState<{ id: number; aciklama: string }[]>(
-        []
-    );
-    const [takimlar, setTakimlar] = useState<{ id: number; aciklama: string }[]>(
-        []
-    );
+    const [birimler, setBirimler] = useState<{ id: number; aciklama: string }[]>([]);
+    const [takimlar, setTakimlar] = useState<{ id: number; aciklama: string }[]>([]);
 
     function handleMenuClick(event: React.MouseEvent<HTMLButtonElement>) {
         setAnchorEl(event.currentTarget);
@@ -78,12 +75,11 @@ function Header() {
                 setTakimlar(response.takimlar ?? []);
             }
 
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
                 BirimId: birimler[0]?.id ?? 0,
-                TakimId: takimlar[0]?.id ?? 0
+                TakimId: takimlar[0]?.id ?? 0,
             }));
-
         } catch (error) {
             console.error("Bilgileri getirirken hata oluştu:", error);
             setBirimler([]);
@@ -108,7 +104,7 @@ function Header() {
         const { name, value } = event.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: Number(value), // 📌 Enum ID olarak saklanıyor!
+            [name]: Number(value),
         }));
     }
 
@@ -125,7 +121,7 @@ function Header() {
     if (user === undefined) return null;
 
     return (
-        <AppBar position="static" sx={{ mb: 4, background: "#000000" }}>
+        <AppBar position="static" sx={{ mb: 4, background: "#111111" }}>
             <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                     <img
@@ -189,20 +185,38 @@ function Header() {
                 </Box>
             </Toolbar>
 
-            {/* 📌 Talep Oluşturma Dialogu */}
-            <Dialog open={openDialog} onClose={handleDialogClose}>
-                <DialogTitle>Talep Oluştur</DialogTitle>
+            {/* Talep Oluşturma Dialogu */}
+            <Dialog open={openDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Typography variant="h6" fontWeight={700}>
+                        Çalışan Talebi Oluştur
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Lütfen aşağıdaki bilgileri eksiksiz doldurun
+                    </Typography>
+                </DialogTitle>
+                <Divider />
                 <DialogContent>
-                    <Grid2 container sx={{ xl: 9, lg: 8, md: 7, sm: 6, xs: 12 }} spacing={{ xs: 1, sm: 2, md: 3 }} >
-                        <TextField name="Ad" label="Ad" fullWidth onChange={handleInputChange} sx={{ mt:5 }} />
-                        <TextField name="Soyad" label="Soyad" fullWidth onChange={handleInputChange} />
+                    <Stack spacing={2} sx={{ pt: 1 }}>
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                            <TextField
+                                name="Ad"
+                                label="Ad"
+                                fullWidth
+                                onChange={handleInputChange}
+                            />
+                            <TextField
+                                name="Soyad"
+                                label="Soyad"
+                                fullWidth
+                                onChange={handleInputChange}
+                            />
+                        </Stack>
 
-                        {/* 📌 Birim Enum ID olarak gönderiliyor */}
-                        <FormControl fullWidth variant="outlined">
+                        <FormControl fullWidth size="small">
                             <InputLabel id="birim-label">Birim</InputLabel>
                             <Select
                                 labelId="birim-label"
-                                id="birim"
                                 name="BirimId"
                                 value={formData.BirimId}
                                 onChange={handleSelectChange}
@@ -216,12 +230,10 @@ function Header() {
                             </Select>
                         </FormControl>
 
-                        {/* 📌 Takım Enum ID olarak gönderiliyor */}
-                        <FormControl fullWidth variant="outlined">
+                        <FormControl fullWidth size="small">
                             <InputLabel id="takim-label">Takım</InputLabel>
                             <Select
                                 labelId="takim-label"
-                                id="takim"
                                 name="TakimId"
                                 value={formData.TakimId}
                                 onChange={handleSelectChange}
@@ -236,31 +248,32 @@ function Header() {
                         </FormControl>
 
                         <Grid2 container spacing={2}>
-                            <Grid2 sx={{xs:12, sm:6}}>
+                            <Grid2 size={{ xs: 12, sm: 8 }}>
                                 <PhoneInput
                                     value={formData.IsCepTelNo}
                                     onChange={(val) =>
                                         setFormData((prev) => ({ ...prev, IsCepTelNo: val }))
                                     }
-                                    sx={{ mt: 1 }}
+                                    fullWidth
                                 />
                             </Grid2>
-
-                            <Grid2 sx={{ xs: 12, sm: 6 }}>
+                            <Grid2 size={{ xs: 12, sm: 4 }}>
                                 <TextField
                                     name="DahiliNo"
                                     label="Dahili No"
                                     fullWidth
                                     onChange={handleInputChange}
-                                    sx={{ mt: 1 }}
                                 />
                             </Grid2>
                         </Grid2>
-                    </Grid2>
+                    </Stack>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDialogClose}>İptal</Button>
-                    <Button onClick={handleSubmit} variant="contained" color="primary">
+                <Divider />
+                <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+                    <Button onClick={handleDialogClose} variant="outlined" color="inherit">
+                        İptal
+                    </Button>
+                    <Button onClick={handleSubmit} variant="contained">
                         Gönder
                     </Button>
                 </DialogActions>

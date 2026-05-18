@@ -1,4 +1,4 @@
-﻿import { Container, CssBaseline} from '@mui/material';
+﻿import { Container } from '@mui/material';
 import Header from './layout/Header';
 import { Outlet } from 'react-router';
 import { ToastContainer } from 'react-toastify';
@@ -24,7 +24,6 @@ export default function App() {
         <>
             <ToastContainer position="bottom-right" hideProgressBar theme="colored" />
 
-            <CssBaseline />
             <Header />
             <Container>
                 <Outlet />
