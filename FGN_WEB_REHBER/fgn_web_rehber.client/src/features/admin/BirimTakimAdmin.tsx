@@ -21,14 +21,16 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useEffect, useMemo, useState } from "react";
 import requests from "../../api/requests";
 
 type Item = { id: number; aciklama: string; active: boolean };
+type TakimItem = Item & { isGizli: boolean };
 
 export function BirimTakimAdmin() {
     const [birimler, setBirimler] = useState<Item[]>([]);
-    const [takimlar, setTakimlar] = useState<Item[]>([]);
+    const [takimlar, setTakimlar] = useState<TakimItem[]>([]);
     const [newBirim, setNewBirim] = useState("");
     const [newTakim, setNewTakim] = useState("");
 
@@ -54,7 +56,8 @@ export function BirimTakimAdmin() {
 
     const takimStats = useMemo(() => {
         const active = takimlar.filter(x => x.active).length;
-        return { active, passive: takimlar.length - active, total: takimlar.length };
+        const gizli = takimlar.filter(x => x.isGizli).length;
+        return { active, passive: takimlar.length - active, total: takimlar.length, gizli };
     }, [takimlar]);
 
     const addBirim = async () => {
@@ -118,6 +121,11 @@ export function BirimTakimAdmin() {
 
     const toggleTakimActive = async (id: number, active: boolean) => {
         await requests.Admin.takimActiveGuncelle(id, active);
+        loadData();
+    };
+
+    const toggleTakimGizli = async (id: number, gizli: boolean) => {
+        await requests.Admin.takimGizliGuncelle(id, gizli);
         loadData();
     };
 
@@ -247,6 +255,9 @@ export function BirimTakimAdmin() {
                                 <Chip size="small" label={`Toplam: ${takimStats.total}`} color="default" />
                                 <Chip size="small" label={`Aktif: ${takimStats.active}`} color="primary" />
                                 <Chip size="small" label={`Pasif: ${takimStats.passive}`} variant="outlined" />
+                                {takimStats.gizli > 0 && (
+                                    <Chip size="small" label={`Gizli: ${takimStats.gizli}`} color="warning" variant="outlined" />
+                                )}
                             </Stack>
                         }
                     />
@@ -284,14 +295,26 @@ export function BirimTakimAdmin() {
                                         sx={{
                                             borderRadius: 1,
                                             mb: 0.5,
-                                            bgcolor: "background.paper",
+                                            bgcolor: t.isGizli ? "warning.50" : "background.paper",
                                             opacity: t.active ? 1 : 0.65,
                                         }}
                                     >
-                                        <Switch
-                                            checked={t.active}
-                                            onChange={(_, checked) => toggleTakimActive(t.id, checked)}
-                                        />
+                                        <Tooltip title="Aktif/Pasif">
+                                            <Switch
+                                                checked={t.active}
+                                                onChange={(_, checked) => toggleTakimActive(t.id, checked)}
+                                            />
+                                        </Tooltip>
+                                        <Tooltip title="Gizli: normal kullanıcıların filtre listesinde görünmez">
+                                            <Switch
+                                                checked={t.isGizli}
+                                                onChange={(_, checked) => toggleTakimGizli(t.id, checked)}
+                                                sx={{
+                                                    "& .MuiSwitch-switchBase.Mui-checked": { color: "warning.main" },
+                                                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: "warning.main" },
+                                                }}
+                                            />
+                                        </Tooltip>
 
                                         {isEditing ? (
                                             <TextField
@@ -308,6 +331,15 @@ export function BirimTakimAdmin() {
                                                     <Stack direction="row" spacing={1} alignItems="center">
                                                         <Typography sx={{ fontWeight: 600 }}>{t.aciklama}</Typography>
                                                         {!t.active && <Chip size="small" label="Pasif" variant="outlined" />}
+                                                        {t.isGizli && (
+                                                            <Chip
+                                                                size="small"
+                                                                label="Gizli"
+                                                                color="warning"
+                                                                icon={<VisibilityOffIcon />}
+                                                                variant="outlined"
+                                                            />
+                                                        )}
                                                     </Stack>
                                                 }
                                             />

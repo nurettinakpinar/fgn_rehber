@@ -106,5 +106,19 @@ namespace FGN_WEB_REHBER.Server.Controllers
         {
             return await GetAllEmployeesAsJson();
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> CalisanSil(int id)
+        {
+            var employee = await _context.Employees.FindAsync(id);
+            if (employee == null)
+                return NotFound("Çalışan Bulunamadı!");
+
+            _context.Employees.Remove(employee);
+            var result = await _context.SaveChangesAsync() > 0;
+            return result
+                ? NoContent()
+                : BadRequest(new ProblemDetails { Title = "Kayıt silinemedi." });
+        }
     }
 }

@@ -63,6 +63,18 @@ export const calisanGuncelle = createAsyncThunk<IEmployee[], { id: number, updat
     }
 );
 
+export const calisanSil = createAsyncThunk<number, number>(
+    "admin/calisanSil",
+    async (id, thunkAPI) => {
+        try {
+            await requests.Admin.calisanSil(id);
+            return id;
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue({ error: error.data });
+        }
+    }
+);
+
 
 export const adminSlice = createSlice({
     name: "admin",
@@ -113,6 +125,17 @@ export const adminSlice = createSlice({
             state.status = "idle";
         });
         builder.addCase(calisanGuncelle.rejected, (state) => {
+            state.status = "idle";
+        });
+
+        builder.addCase(calisanSil.pending, (state, action) => {
+            state.status = "pendingCalisanSil" + action.meta.arg;
+        });
+        builder.addCase(calisanSil.fulfilled, (state, action) => {
+            adminAdapter.removeOne(state, action.payload);
+            state.status = "idle";
+        });
+        builder.addCase(calisanSil.rejected, (state) => {
             state.status = "idle";
         });
     }

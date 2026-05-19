@@ -23,7 +23,7 @@ namespace FGN_WEB_REHBER.Server.Controllers
         public async Task<IActionResult> GetAll()
         {
             var takimlar = await _context.Takimlar
-                .Select(t => new { t.Id, t.Aciklama, t.Active })
+                .Select(t => new { t.Id, t.Aciklama, t.Active, t.IsGizli })
                 .ToListAsync();
 
             return Ok(takimlar);
@@ -63,6 +63,18 @@ namespace FGN_WEB_REHBER.Server.Controllers
             if (takim == null) return NotFound();
 
             takim.Active = dto.active;
+            await _context.SaveChangesAsync();
+
+            return Ok(takim);
+        }
+
+        [HttpPut("{id}/gizli")]
+        public async Task<IActionResult> Update_gizli(int id, [FromBody] UpdateGizliDto dto)
+        {
+            var takim = await _context.Takimlar.FindAsync(id);
+            if (takim == null) return NotFound();
+
+            takim.IsGizli = dto.Gizli;
             await _context.SaveChangesAsync();
 
             return Ok(takim);

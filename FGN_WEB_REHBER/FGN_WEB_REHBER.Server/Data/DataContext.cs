@@ -9,6 +9,7 @@ namespace FGN_WEB_REHBER.Server.Data
         public DbSet<Employee> Employees => Set<Employee>();
         public DbSet<Team> Takimlar { get; set; }
         public DbSet<Department> Birimler { get; set; }
+        public DbSet<AdminSilmeLog> AdminSilmeLoglari { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

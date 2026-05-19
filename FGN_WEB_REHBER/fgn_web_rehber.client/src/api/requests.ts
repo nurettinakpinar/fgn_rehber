@@ -89,24 +89,24 @@ const Admin = {
     takimEkle: (aciklama: string) => queries.post("Admin/takim", { aciklama }),
     takimAciklamaGuncelle: (id: number, aciklama: string) => queries.put(`Admin/takim/${id}/aciklama`, { aciklama }),
     takimActiveGuncelle: (id: number, active: boolean) => queries.put(`Admin/takim/${id}/active`, { active }),
+    takimGizliGuncelle: (id: number, gizli: boolean) => queries.put(`Admin/takim/${id}/gizli`, { Gizli: gizli }),
+    // --- Calisan ---
+    calisanSil: (id: number) => queries.delete(`Admin/${id}`),
 }
 
 const Rehber = {
-    list: (searchTerm?: string, takimEnum?: number) => {
-        let queryParams = [];
+    list: (searchTerm?: string, takimId?: number, birimId?: number) => {
+        const queryParams: string[] = [];
 
-        if (searchTerm) {
-            queryParams.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
-        }
-
-        if (takimEnum !== undefined) {
-            queryParams.push(`takimId=${takimEnum}`);
-        }
+        if (searchTerm) queryParams.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
+        if (takimId) queryParams.push(`takimId=${takimId}`);
+        if (birimId) queryParams.push(`birimId=${birimId}`);
 
         const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
         return queries.get(`Rehber${queryString}`);
     },
     BilgileriGetir: () => queries.get(`Rehber/BilgileriGetir`),
+    TalepBilgileriGetir: () => queries.get(`Rehber/TalepBilgileriGetir`),
     yeniTalepOlustur: (formData: any) => queries.post(`Rehber/talep-olustur`, formData),
 }
 
@@ -114,6 +114,11 @@ const Account = {
     login: (formData: any) => queries.post("account/login", formData),
     register: (formData: any) => queries.post("account/register", formData),
     getUser: () => queries.get("account/getuser"),
+    changePassword: (formData: { CurrentPassword: string; NewPassword: string }) =>
+        queries.put("account/change-password", formData),
+    getUsers: () => queries.get("account/users"),
+    deleteUser: (id: string) => queries.delete(`account/users/${id}`),
+    getDeleteLogs: () => queries.get("account/delete-logs"),
 }
 
 const requests = {

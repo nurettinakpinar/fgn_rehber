@@ -25,6 +25,7 @@ import { KeyboardArrowDown, PersonAddOutlined } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { logout } from "../redux/AccountSlice";
 import requests from "../api/requests";
+import { toast } from "react-toastify";
 import "react-international-phone/style.css";
 import { PhoneInput } from "../features/customComponents/PhoneInput";
 
@@ -59,6 +60,15 @@ function Header() {
     const [birimler, setBirimler] = useState<{ id: number; aciklama: string }[]>([]);
     const [takimlar, setTakimlar] = useState<{ id: number; aciklama: string }[]>([]);
 
+    // Şifre değiştirme
+    const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({
+        CurrentPassword: "",
+        NewPassword: "",
+        NewPasswordConfirm: "",
+    });
+    const [passwordError, setPasswordError] = useState("");
+
     function handleMenuClick(event: React.MouseEvent<HTMLButtonElement>) {
         setAnchorEl(event.currentTarget);
     }
@@ -69,11 +79,32 @@ function Header() {
 
     async function handleDialogOpen() {
         try {
-            const response = await requests.Rehber.BilgileriGetir();
+            const response = await requests.Rehber.TalepBilgileriGetir();
             if (response) {
                 setBirimler(response.birimler ?? []);
                 setTakimlar(response.takimlar ?? []);
             }
+
+            setFormData((prev) => ({
+                ...prev,
+                BirimId: birimler[0]?.id ?? 0,
+                TakimId: takimlar[0]?.id ?? 0,
+            }));
+        } catch (error) {
+            console.error("Bilgileri getirirken hata oluştu:", error);
+            setBirimler([]);
+            setTakimlar([]);
+        }
+
+        setOpenDialog(true);
+    }
+
+    async function handleAdminDialogOpen() {
+        try {
+            const b = await requests.Admin.getBirimler();
+            const t = await requests.Admin.getTakimlar();
+            setBirimler(b);
+            setTakimlar(t);
 
             setFormData((prev) => ({
                 ...prev,
@@ -111,10 +142,41 @@ function Header() {
     async function handleSubmit() {
         try {
             await requests.Rehber.yeniTalepOlustur(formData);
-            alert("Talep başarıyla oluşturuldu!");
             setOpenDialog(false);
+            toast.success("Talebiniz alındı. BT ekibi tarafından incelendikten sonra rehbere eklenecektir.");
         } catch (error) {
             console.error("Hata:", error);
+            toast.error("Talep oluşturulurken bir hata oluştu.");
+        }
+    }
+
+    function handlePasswordDialogOpen() {
+        setPasswordForm({ CurrentPassword: "", NewPassword: "", NewPasswordConfirm: "" });
+        setPasswordError("");
+        setOpenPasswordDialog(true);
+        handleClose();
+    }
+
+    function handlePasswordDialogClose() {
+        setOpenPasswordDialog(false);
+    }
+
+    async function handlePasswordSubmit() {
+        if (passwordForm.NewPassword !== passwordForm.NewPasswordConfirm) {
+            setPasswordError("Yeni şifreler eşleşmiyor.");
+            return;
+        }
+        setPasswordError("");
+        try {
+            await requests.Account.changePassword({
+                CurrentPassword: passwordForm.CurrentPassword,
+                NewPassword: passwordForm.NewPassword,
+            });
+            setOpenPasswordDialog(false);
+            toast.success("Şifreniz başarıyla değiştirildi.");
+        } catch (error) {
+            console.error("Hata:", error);
+            toast.error("Şifre değiştirilemedi. Mevcut şifrenizi kontrol edin.");
         }
     }
 
@@ -145,33 +207,44 @@ function Header() {
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                     {user ? (
-                        <>
-                            <Button
-                                id="user-button"
-                                onClick={handleMenuClick}
-                                endIcon={<KeyboardArrowDown />}
-                                sx={navStyles}
-                            >
-                                {user.name}
-                            </Button>
-                            <Menu
-                                id="user-menu"
-                                anchorEl={anchorEl}
-                                open={Boolean(anchorEl)}
-                                onClose={handleClose}
-                            >
-                                <MenuItem component={Link} to="/admin" onClick={handleClose}>
-                                    Talepler
-                                </MenuItem>
-                                <MenuItem
-                                    onClick={() => {
-                                        dispatch(logout());
-                                        handleClose();
-                                    }}
+                        <>                  
+                            <Stack direction="row">
+                                {authLinks.map((link) => (
+                                    <Button key={link.to} onClick={handleAdminDialogOpen}>
+                                        <PersonAddOutlined sx={{ color: "white" }} />
+                                    </Button>
+                                ))}
+                                
+                                <Button
+                                    id="user-button"
+                                    onClick={handleMenuClick}
+                                    endIcon={<KeyboardArrowDown />}
+                                    sx={navStyles}
                                 >
-                                    Çıkış yap
-                                </MenuItem>
-                            </Menu>
+                                    {user.name}
+                                </Button>
+                                <Menu
+                                    id="user-menu"
+                                    anchorEl={anchorEl}
+                                    open={Boolean(anchorEl)}
+                                    onClose={handleClose}
+                                >
+                                    <MenuItem component={Link} to="/admin" onClick={handleClose}>
+                                        Talepler
+                                    </MenuItem>
+                                    <MenuItem onClick={handlePasswordDialogOpen}>
+                                        Şifre Değiştir
+                                    </MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            dispatch(logout());
+                                            handleClose();
+                                        }}
+                                    >
+                                        Çıkış yap
+                                    </MenuItem>
+                                </Menu>
+                            </Stack>
                         </>
                     ) : (
                         <Stack direction="row">
@@ -192,7 +265,7 @@ function Header() {
                         Çalışan Talebi Oluştur
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Lütfen aşağıdaki bilgileri eksiksiz doldurun
+                        Lütfen aşağıdaki bilgileri eksiksiz doldurun.
                     </Typography>
                 </DialogTitle>
                 <Divider />
@@ -266,6 +339,11 @@ function Header() {
                                 />
                             </Grid2>
                         </Grid2>
+                        <Divider>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                Not: Eğer cep telefonu veya dahili yoksa bu alanlar boş bırakılabilir.
+                            </Typography>
+                        </Divider>
                     </Stack>
                 </DialogContent>
                 <Divider />
@@ -275,6 +353,58 @@ function Header() {
                     </Button>
                     <Button onClick={handleSubmit} variant="contained">
                         Gönder
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Şifre Değiştirme Dialogu */}
+            <Dialog open={openPasswordDialog} onClose={handlePasswordDialogClose} maxWidth="xs" fullWidth>
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Typography variant="h6" fontWeight={700}>
+                        Şifre Değiştir
+                    </Typography>
+                </DialogTitle>
+                <Divider />
+                <DialogContent>
+                    <Stack spacing={2} sx={{ pt: 1 }}>
+                        <TextField
+                            label="Mevcut Şifre"
+                            type="password"
+                            fullWidth
+                            value={passwordForm.CurrentPassword}
+                            onChange={(e) =>
+                                setPasswordForm((prev) => ({ ...prev, CurrentPassword: e.target.value }))
+                            }
+                        />
+                        <TextField
+                            label="Yeni Şifre"
+                            type="password"
+                            fullWidth
+                            value={passwordForm.NewPassword}
+                            onChange={(e) =>
+                                setPasswordForm((prev) => ({ ...prev, NewPassword: e.target.value }))
+                            }
+                        />
+                        <TextField
+                            label="Yeni Şifre (Tekrar)"
+                            type="password"
+                            fullWidth
+                            value={passwordForm.NewPasswordConfirm}
+                            onChange={(e) =>
+                                setPasswordForm((prev) => ({ ...prev, NewPasswordConfirm: e.target.value }))
+                            }
+                            error={!!passwordError}
+                            helperText={passwordError}
+                        />
+                    </Stack>
+                </DialogContent>
+                <Divider />
+                <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+                    <Button onClick={handlePasswordDialogClose} variant="outlined" color="inherit">
+                        İptal
+                    </Button>
+                    <Button onClick={handlePasswordSubmit} variant="contained">
+                        Kaydet
                     </Button>
                 </DialogActions>
             </Dialog>

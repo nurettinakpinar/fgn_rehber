@@ -25,15 +25,9 @@ namespace FGN_WEB_REHBER.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCalisanlar(string? searchTerm, int? takimId)
+        public async Task<IActionResult> GetCalisanlar(string? searchTerm, int? takimId, int? birimId)
         {
             var query = _context.Employees.AsQueryable();
-
-            //if (!string.IsNullOrEmpty(searchTerm))
-            //{
-            //    query = query.Where(e => e.AdSoyad.ToLower().Contains(searchTerm.ToLower()) ||
-            //                             e.IsCepTelNo.Contains(searchTerm));
-            //}
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -47,6 +41,9 @@ namespace FGN_WEB_REHBER.Server.Controllers
 
             if (takimId != null)
                 query = query.Where(e => e.TakimId == takimId);
+
+            if (birimId != null)
+                query = query.Where(e => e.BirimId == birimId);
 
             query = query.Where(e => e.TalepDurum == TalepDurumEnum.ONAY && e.Birim.Active == true && e.Takim.Active == true);
 
@@ -75,20 +72,37 @@ namespace FGN_WEB_REHBER.Server.Controllers
         public async Task<IActionResult> BilgileriGetir()
         {
             var birimler = await _context.Birimler
-                .Select(b => new { b.Id, b.Aciklama, b.Active })
-                .Where(b => b.Active == true)
+                .Where(b => b.Active)
+                .Select(b => new { b.Id, b.Aciklama })
                 .ToListAsync();
 
             var takimlar = await _context.Takimlar
-                .Select(t => new { t.Id, t.Aciklama, t.Active })
-                .Where(t => t.Active == true)
+                .Where(t => t.Active)
+                .Select(t => new { t.Id, t.Aciklama })
                 .ToListAsync();
 
-            return Ok(new
-            {
-                birimler = birimler,
-                takimlar = takimlar
-            });
+            return Ok(new { birimler, takimlar });
+        }
+
+        [HttpGet("TalepBilgileriGetir")]
+        public async Task<IActionResult> TalepBilgileriGetir()
+        {
+            var isAdmin = User.IsInRole("admin");
+
+            var birimler = await _context.Birimler
+                .Where(b => b.Active)
+                .Select(b => new { b.Id, b.Aciklama })
+                .ToListAsync();
+
+            var takimQuery = _context.Takimlar.Where(t => t.Active);
+            if (!isAdmin)
+                takimQuery = takimQuery.Where(t => !t.IsGizli);
+
+            var takimlar = await takimQuery
+                .Select(t => new { t.Id, t.Aciklama })
+                .ToListAsync();
+
+            return Ok(new { birimler, takimlar });
         }
 
 
