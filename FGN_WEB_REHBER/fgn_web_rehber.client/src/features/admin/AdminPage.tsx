@@ -1,6 +1,6 @@
 import {
     Box, Button, CircularProgress, Divider, FormControl, Grid2, InputLabel,
-    MenuItem, Paper, Select, SelectChangeEvent, Stack, Table, TableBody,
+    MenuItem, Paper, Select, Stack, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Tabs, Tab, Dialog,
     DialogTitle, DialogContent, DialogActions, TextField, Typography,
 } from "@mui/material";
@@ -73,8 +73,8 @@ function AdminPage() {
             updated: {
                 Ad: ad,
                 Soyad: soyadArr.join(" "),
-                BirimId: Number(editEmployee.Birim),
-                TakimId: Number(editEmployee.Takim),
+                BirimId: Number(editEmployee.BirimId),
+                TakimId: Number(editEmployee.TakimId),
                 DahiliNo: editEmployee.DahiliNo,
                 IsCepTelNo: editEmployee.IsCepTelNo,
             },
@@ -95,8 +95,8 @@ function AdminPage() {
 
         if (adminSearch && !emp.AdSoyad.toLocaleLowerCase("tr-TR").includes(adminSearch.toLocaleLowerCase("tr-TR")))
             return false;
-        if (adminBirimFilter !== ALL && (emp as any).BirimId !== adminBirimFilter) return false;
-        if (adminTakimFilter !== ALL && (emp as any).TakimId !== adminTakimFilter) return false;
+        if (adminBirimFilter !== ALL && Number((emp as any).BirimId) !== adminBirimFilter) return false;
+        if (adminTakimFilter !== ALL && Number((emp as any).TakimId) !== adminTakimFilter) return false;
 
         return true;
     });
@@ -185,12 +185,16 @@ function AdminPage() {
                             <FormControl fullWidth size="small">
                                 <InputLabel>Birim</InputLabel>
                                 <Select
-                                    value={adminBirimFilter}
                                     label="Birim"
-                                    onChange={(e: SelectChangeEvent<number>) => setAdminBirimFilter(Number(e.target.value))}
+                                    value={String(adminBirimFilter)}
+                                    onChange={(e) => setAdminBirimFilter(Number(e.target.value))}
                                 >
-                                    <MenuItem value={ALL}>Tüm Birimler</MenuItem>
-                                    {birimler.map((b) => <MenuItem key={b.id} value={b.id}>{b.aciklama}</MenuItem>)}
+                                    <MenuItem value={String(ALL)}>Tümü</MenuItem>
+                                    {birimler.map((b) => (
+                                        <MenuItem key={b.id} value={String(b.id)}>
+                                            {b.aciklama}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid2>
@@ -198,12 +202,16 @@ function AdminPage() {
                             <FormControl fullWidth size="small">
                                 <InputLabel>Takım</InputLabel>
                                 <Select
-                                    value={adminTakimFilter}
                                     label="Takım"
-                                    onChange={(e: SelectChangeEvent<number>) => setAdminTakimFilter(Number(e.target.value))}
+                                    value={String(adminTakimFilter)}
+                                    onChange={(e) => setAdminTakimFilter(Number(e.target.value))}
                                 >
-                                    <MenuItem value={ALL}>Tüm Takımlar</MenuItem>
-                                    {takimlar.map((t) => <MenuItem key={t.id} value={t.id}>{t.aciklama}</MenuItem>)}
+                                    <MenuItem value={String(ALL)}>Tümü</MenuItem>
+                                    {takimlar.map((t) => (
+                                        <MenuItem key={t.id} value={String(t.id)}>
+                                            {t.aciklama}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid2>
@@ -276,15 +284,23 @@ function AdminPage() {
                             </Stack>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Birim</InputLabel>
-                                <Select name="Birim" label="Birim" value={String(editEmployee.Birim)}
-                                    onChange={(e) => setEditEmployee((prev) => prev ? { ...prev, Birim: String(e.target.value) } : prev)}>
+                                <Select name="Birim" label="Birim" value={String(editEmployee.BirimId ?? "")}
+                                    onChange={(e) => {
+                                        const selectedId = Number(e.target.value);
+                                        const selectedBirim = birimler.find((b) => b.id === selectedId);
+                                        setEditEmployee((prev) => prev ? { ...prev, BirimId: selectedId, Birim: selectedBirim?.aciklama ?? prev.Birim } : prev);
+                                    }}>
                                     {birimler.map((b) => <MenuItem key={b.id} value={String(b.id)}>{b.aciklama}</MenuItem>)}
                                 </Select>
                             </FormControl>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Takım</InputLabel>
-                                <Select name="Takim" label="Takım" value={String(editEmployee.Takim)}
-                                    onChange={(e) => setEditEmployee((prev) => prev ? { ...prev, Takim: String(e.target.value) } : prev)}>
+                                <Select name="Takim" label="Takım" value={String(editEmployee.TakimId ?? "")}
+                                    onChange={(e) => {
+                                        const selectedId = Number(e.target.value);
+                                        const selectedTakim = takimlar.find((t) => t.id === selectedId);
+                                        setEditEmployee((prev) => prev ? { ...prev, TakimId: selectedId, Takim: selectedTakim?.aciklama ?? prev.Takim } : prev);
+                                    }}>
                                     {takimlar.map((t) => <MenuItem key={t.id} value={String(t.id)}>{t.aciklama}</MenuItem>)}
                                 </Select>
                             </FormControl>

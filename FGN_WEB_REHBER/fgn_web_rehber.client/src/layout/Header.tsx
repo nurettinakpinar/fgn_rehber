@@ -40,6 +40,15 @@ const navStyles = {
     },
 } as const;
 
+const initialFormData = {
+    Ad: "",
+    Soyad: "",
+    BirimId: 0,
+    TakimId: 0,
+    DahiliNo: "",
+    IsCepTelNo: "",
+};
+
 function Header() {
     const fgnLogo = "/fergani-light-logo.png";
     const { user } = useAppSelector((state) => state.account);
@@ -48,17 +57,12 @@ function Header() {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [openDialog, setOpenDialog] = useState(false);
 
-    const [formData, setFormData] = useState({
-        Ad: "",
-        Soyad: "",
-        BirimId: 0,
-        TakimId: 0,
-        DahiliNo: "",
-        IsCepTelNo: "",
-    });
+    const [formData, setFormData] = useState(initialFormData);
 
     const [birimler, setBirimler] = useState<{ id: number; aciklama: string }[]>([]);
     const [takimlar, setTakimlar] = useState<{ id: number; aciklama: string }[]>([]);
+
+    const [formSubmitted, setFormSubmitted] = useState(false);
 
     // Şifre değiştirme
     const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
@@ -80,15 +84,17 @@ function Header() {
     async function handleDialogOpen() {
         try {
             const response = await requests.Rehber.TalepBilgileriGetir();
-            if (response) {
-                setBirimler(response.birimler ?? []);
-                setTakimlar(response.takimlar ?? []);
-            }
+
+            const gelenBirimler = response?.birimler ?? [];
+            const gelenTakimlar = response?.takimlar ?? [];
+
+            setBirimler(gelenBirimler);
+            setTakimlar(gelenTakimlar);
 
             setFormData((prev) => ({
                 ...prev,
-                BirimId: birimler[0]?.id ?? 0,
-                TakimId: takimlar[0]?.id ?? 0,
+                BirimId: gelenBirimler[0]?.id ?? 0,
+                TakimId: gelenTakimlar[0]?.id ?? 0,
             }));
         } catch (error) {
             console.error("Bilgileri getirirken hata oluştu:", error);
@@ -103,13 +109,17 @@ function Header() {
         try {
             const b = await requests.Admin.getBirimler();
             const t = await requests.Admin.getTakimlar();
-            setBirimler(b);
-            setTakimlar(t);
+
+            const gelenBirimler = b ?? [];
+            const gelenTakimlar = t ?? [];
+
+            setBirimler(gelenBirimler);
+            setTakimlar(gelenTakimlar);
 
             setFormData((prev) => ({
                 ...prev,
-                BirimId: birimler[0]?.id ?? 0,
-                TakimId: takimlar[0]?.id ?? 0,
+                BirimId: gelenBirimler[0]?.id ?? 0,
+                TakimId: gelenTakimlar[0]?.id ?? 0,
             }));
         } catch (error) {
             console.error("Bilgileri getirirken hata oluştu:", error);
@@ -141,9 +151,17 @@ function Header() {
 
     async function handleSubmit() {
         try {
+            setFormSubmitted(true);
+            if (!formData.Ad || !formData.Soyad || !formData.BirimId || !formData.TakimId) {
+                toast.error("Lütfen zorunlu alanları doldurun.");
+                return;
+            }
+
             await requests.Rehber.yeniTalepOlustur(formData);
             setOpenDialog(false);
             toast.success("Talebiniz alındı. BT ekibi tarafından incelendikten sonra rehbere eklenecektir.");
+            setFormData(initialFormData); 
+            setFormSubmitted(false);
         } catch (error) {
             console.error("Hata:", error);
             toast.error("Talep oluşturulurken bir hata oluştu.");
@@ -276,13 +294,19 @@ function Header() {
                                 name="Ad"
                                 label="Ad"
                                 fullWidth
-                                onChange={handleInputChange}
+                                onChange={handleInputChange} 
+                                required
+                                error={formSubmitted && !formData.Ad}
+                                helperText={formSubmitted && !formData.Ad ? "Ad alanı zorunludur." : ""}
                             />
                             <TextField
                                 name="Soyad"
                                 label="Soyad"
                                 fullWidth
                                 onChange={handleInputChange}
+                                required
+                                error={formSubmitted && !formData.Soyad}
+                                helperText={formSubmitted && !formData.Soyad ? "Soyad alanı zorunludur." : ""}
                             />
                         </Stack>
 
@@ -294,6 +318,8 @@ function Header() {
                                 value={formData.BirimId}
                                 onChange={handleSelectChange}
                                 label="Birim"
+                                required
+                                error={formSubmitted && !formData.BirimId}
                             >
                                 {birimler.map((birim) => (
                                     <MenuItem key={birim.id} value={birim.id}>
@@ -311,6 +337,8 @@ function Header() {
                                 value={formData.TakimId}
                                 onChange={handleSelectChange}
                                 label="Takım"
+                                required
+                                error={formSubmitted && !formData.TakimId}
                             >
                                 {takimlar.map((takim) => (
                                     <MenuItem key={takim.id} value={takim.id}>
