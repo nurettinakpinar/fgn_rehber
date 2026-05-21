@@ -1,15 +1,16 @@
 import {
-    Box, Button, CircularProgress, Divider, FormControl, Grid2, InputLabel,
+    Avatar, Box, Button, CircularProgress, Divider, FormControl, Grid2, InputLabel,
     MenuItem, Paper, Select, Stack, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Tabs, Tab, Dialog,
     DialogTitle, DialogContent, DialogActions, TextField, Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
-import { Check, Close, Delete, Edit } from "@mui/icons-material";
+import { useEffect, useRef, useState } from "react";
+import { Check, Close, Delete, Edit, PhotoCamera } from "@mui/icons-material";
+import { EmployeeAvatar } from "../customComponents/EmployeeAvatar";
 import { useAppDispatch, useAppSelector } from "../../redux/store";
 import {
     adminSelector, fetchEmployees, yeniCalisanTalepOnayla,
-    yeniCalisanTalepReddet, calisanGuncelle, calisanSil,
+    yeniCalisanTalepReddet, calisanGuncelle, calisanSil, calisanFotoUrlGuncelle,
 } from "../../redux/AdminSlice";
 import formatPhoneNumber from "../../utils/formatter";
 import requests from "../../api/requests";
@@ -44,6 +45,11 @@ function AdminPage() {
     // A3: silme onay dialogu
     const [deleteTarget, setDeleteTarget] = useState<EmployeeRow | null>(null);
 
+    // Fotoğraf yönetimi
+    const [fotoFile, setFotoFile] = useState<File | null>(null);
+    const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+    const fotoInputRef = useRef<HTMLInputElement>(null);
+
     useEffect(() => {
         if (!isLoaded) dispatch(fetchEmployees());
         // B1: sayfa yüklenince birim/takım listesini çek
@@ -57,12 +63,58 @@ function AdminPage() {
 
     const handleEditOpen = (employee: EmployeeRow) => {
         setEditEmployee(employee);
+        setFotoFile(null);
+        setFotoPreview(null);
+        if (fotoInputRef.current) fotoInputRef.current.value = "";
         setEditDialogOpen(true);
     };
 
     const handleEditClose = () => {
         setEditDialogOpen(false);
         setEditEmployee(null);
+        setFotoFile(null);
+        setFotoPreview(null);
+        if (fotoInputRef.current) fotoInputRef.current.value = "";
+    };
+
+    const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
+            alert("Sadece JPG ve PNG formatları desteklenmektedir.");
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Dosya boyutu en fazla 2 MB olabilir.");
+            return;
+        }
+        setFotoFile(file);
+        setFotoPreview(URL.createObjectURL(file));
+    };
+
+    const handleFotoYukle = async () => {
+        if (!fotoFile || !editEmployee) return;
+        try {
+            const res = await requests.Admin.calisanFotoYukle(editEmployee.Id, fotoFile);
+            dispatch(calisanFotoUrlGuncelle({ id: editEmployee.Id, fotoUrl: res.FotoUrl }));
+            setEditEmployee((prev) => prev ? { ...prev, FotoUrl: res.FotoUrl } : prev);
+            setFotoFile(null);
+            setFotoPreview(null);
+            if (fotoInputRef.current) fotoInputRef.current.value = "";
+        } catch {
+            alert("Fotoğraf yüklenirken bir hata oluştu.");
+        }
+    };
+
+    const handleFotoSil = async () => {
+        if (!editEmployee) return;
+        try {
+            await requests.Admin.calisanFotoSil(editEmployee.Id);
+            dispatch(calisanFotoUrlGuncelle({ id: editEmployee.Id, fotoUrl: null }));
+            setEditEmployee((prev) => prev ? { ...prev, FotoUrl: undefined } : prev);
+        } catch {
+            alert("Fotoğraf silinirken bir hata oluştu.");
+        }
     };
 
     const handleEditSave = () => {
@@ -224,6 +276,7 @@ function AdminPage() {
                             <Table>
                                 <TableHead>
                                     <TableRow>
+                                        <TableCell sx={{ width: 48 }} />
                                         <TableCell>Ad Soyad</TableCell>
                                         <TableCell>Birim</TableCell>
                                         <TableCell>Takım</TableCell>
@@ -235,13 +288,16 @@ function AdminPage() {
                                 <TableBody>
                                     {filteredEmployees.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} align="center" sx={{ py: 5, color: "text.secondary" }}>
+                                            <TableCell colSpan={7} align="center" sx={{ py: 5, color: "text.secondary" }}>
                                                 Kayıt bulunamadı.
                                             </TableCell>
                                         </TableRow>
                                     ) : (
                                         filteredEmployees.map((item, index) => (
                                             <TableRow key={(item as any).Id ?? index}>
+                                                <TableCell sx={{ py: 0.5 }}>
+                                                    <EmployeeAvatar fotoUrl={item.FotoUrl} name={item.AdSoyad} size={36} />
+                                                </TableCell>
                                                 <TableCell>{item.AdSoyad}</TableCell>
                                                 <TableCell>{item.Birim}</TableCell>
                                                 <TableCell>{item.Takim}</TableCell>
@@ -270,6 +326,54 @@ function AdminPage() {
                     <Divider />
                     <DialogContent>
                         <Stack spacing={2} sx={{ pt: 1 }}>
+                            {/* Fotoğraf yönetimi */}
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                {fotoPreview ? (
+                                    <Avatar
+                                        sx={{ width: 72, height: 72, bgcolor: "#111111", cursor: "pointer" }}
+                                        onClick={() => fotoInputRef.current?.click()}
+                                    >
+                                        <img src={fotoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    </Avatar>
+                                ) : (
+                                    <EmployeeAvatar
+                                        fotoUrl={editEmployee.FotoUrl}
+                                        name={editEmployee.AdSoyad}
+                                        size={72}
+                                        onClick={() => fotoInputRef.current?.click()}
+                                    >
+                                        <PhotoCamera />
+                                    </EmployeeAvatar>
+                                )}
+                                <Box>
+                                    <input
+                                        ref={fotoInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/jpg,image/png"
+                                        style={{ display: "none" }}
+                                        onChange={handleFotoChange}
+                                    />
+                                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                                        <Button size="small" variant="outlined" onClick={() => fotoInputRef.current?.click()}>
+                                            {fotoFile ? "Tekrar Seç" : editEmployee.FotoUrl ? "Değiştir" : "Fotoğraf Seç"}
+                                        </Button>
+                                        {fotoFile && (
+                                            <Button size="small" variant="contained" color="primary" onClick={handleFotoYukle}>
+                                                Yükle
+                                            </Button>
+                                        )}
+                                        {editEmployee.FotoUrl && !fotoFile && (
+                                            <Button size="small" variant="outlined" color="error" onClick={handleFotoSil}>
+                                                Fotoğrafı Sil
+                                            </Button>
+                                        )}
+                                    </Stack>
+                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+                                        JPG veya PNG · Max 2 MB
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <Divider />
                             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                                 <TextField
                                     label="Ad" fullWidth

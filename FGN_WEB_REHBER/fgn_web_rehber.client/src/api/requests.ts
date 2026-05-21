@@ -65,10 +65,15 @@ axios.interceptors.response.use(
     }
 );
 
+const apiOrigin = import.meta.env.PROD ? "" : "https://localhost:7229";
+export const getPhotoUrl = (fotoUrl?: string): string | undefined =>
+    fotoUrl ? `${apiOrigin}${fotoUrl}` : undefined;
+
 const queries =
 {
     get: (url: string) => axios.get(url).then((response: AxiosResponse) => response.data),
     post: (url: string, body: {}) => axios.post(url, body).then((response: AxiosResponse) => response.data),
+    postForm: (url: string, formData: FormData) => axios.post(url, formData, { headers: { "Content-Type": "multipart/form-data" } }).then((response: AxiosResponse) => response.data),
     put: (url: string, body: {}) => axios.put(url, body).then((response: AxiosResponse) => response.data),
     delete: (url: string) => axios.delete(url).then((response: AxiosResponse) => response.data),
 }
@@ -92,6 +97,12 @@ const Admin = {
     takimGizliGuncelle: (id: number, gizli: boolean) => queries.put(`Admin/takim/${id}/gizli`, { Gizli: gizli }),
     // --- Calisan ---
     calisanSil: (id: number) => queries.delete(`Admin/${id}`),
+    calisanFotoYukle: (id: number, file: File) => {
+        const fd = new FormData();
+        fd.append("foto", file);
+        return queries.postForm(`Admin/calisan-foto/${id}`, fd);
+    },
+    calisanFotoSil: (id: number) => queries.delete(`Admin/calisan-foto/${id}`),
 }
 
 const Rehber = {
@@ -107,7 +118,7 @@ const Rehber = {
     },
     BilgileriGetir: () => queries.get(`Rehber/BilgileriGetir`),
     TalepBilgileriGetir: () => queries.get(`Rehber/TalepBilgileriGetir`),
-    yeniTalepOlustur: (formData: any) => queries.post(`Rehber/talep-olustur`, formData),
+    yeniTalepOlustur: (formData: FormData) => queries.postForm(`Rehber/talep-olustur`, formData),
 }
 
 const Account = {

@@ -57,7 +57,8 @@ namespace FGN_WEB_REHBER.Server.Controllers
                      Birim = e.Birim.Aciklama,
                      Takim = e.Takim.Aciklama,
                      e.DahiliNo,
-                     e.IsCepTelNo
+                     e.IsCepTelNo,
+                     e.FotoUrl
                  })
                  .ToListAsync();
 
@@ -107,7 +108,7 @@ namespace FGN_WEB_REHBER.Server.Controllers
 
 
         [HttpPost("talep-olustur")]
-        public async Task<ActionResult> YeniCalisanTalepOlustur([FromBody] EmployeeDTO employeeDTO)
+        public async Task<ActionResult> YeniCalisanTalepOlustur([FromForm] EmployeeDTO employeeDTO, IFormFile? foto)
         {
             if (employeeDTO == null)
             {
@@ -115,7 +116,7 @@ namespace FGN_WEB_REHBER.Server.Controllers
             }
 
             CultureInfo culture = new CultureInfo("tr-TR");
-            TextInfo textInfo = culture.TextInfo; // Büyük harf dönüşümü için
+            TextInfo textInfo = culture.TextInfo;
 
             var employee = new Employee
             {
@@ -129,17 +130,31 @@ namespace FGN_WEB_REHBER.Server.Controllers
             _context.Employees.Add(employee);
             var result = await _context.SaveChangesAsync() > 0;
 
-            if (result)
+            if (!result)
+                return BadRequest(new ProblemDetails { Title = "Talep oluşturulurken bir hata meydana geldi. BT ekibi ile iletişime geçiniz." });
+
+            if (foto != null && foto.Length > 0)
             {
-                // CreatedAtAction kullanımı düzeltildi
-                return CreatedAtAction(nameof(YeniCalisanTalepOlustur), new { id = employee.Id }, new
+                var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png" };
+                if (allowedTypes.Contains(foto.ContentType.ToLower()) && foto.Length <= 2 * 1024 * 1024)
                 {
-                    Message = "Talebiniz başarıyla alındı. Bilgi Teknolojileri ekibi tarafından incelendikten sonra ekleme yapılacaktır.",
-                    EmployeeId = employee.Id
-                });
+                    var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "photos");
+                    Directory.CreateDirectory(uploadsDir);
+                    var ext = Path.GetExtension(foto.FileName).ToLowerInvariant();
+                    var fileName = $"{employee.Id}{ext}";
+                    var filePath = Path.Combine(uploadsDir, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                        await foto.CopyToAsync(stream);
+                    employee.FotoUrl = $"/uploads/photos/{fileName}";
+                    await _context.SaveChangesAsync();
+                }
             }
 
-            return BadRequest(new ProblemDetails { Title = "Talep oluşturulurken bir hata meydana geldi. BT ekibi ile iletişime geçiniz." });
+            return CreatedAtAction(nameof(YeniCalisanTalepOlustur), new { id = employee.Id }, new
+            {
+                Message = "Talebiniz başarıyla alındı. Bilgi Teknolojileri ekibi tarafından incelendikten sonra ekleme yapılacaktır.",
+                EmployeeId = employee.Id
+            });
         }
 
 

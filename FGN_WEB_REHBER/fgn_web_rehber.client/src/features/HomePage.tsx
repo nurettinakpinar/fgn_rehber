@@ -1,5 +1,4 @@
 import {
-    Avatar,
     Box,
     Button,
     CircularProgress,
@@ -38,6 +37,7 @@ import { useEffect, useMemo, useState } from "react";
 import { styled } from "@mui/material/styles";
 import { tableCellClasses } from "@mui/material/TableCell";
 import requests from "../api/requests";
+import { EmployeeAvatar } from "./customComponents/EmployeeAvatar";
 import formatPhoneNumber from "../utils/formatter";
 import { IEmployee } from "../models/IEmployee";
 import { useAppSelector } from "../redux/store";
@@ -200,9 +200,9 @@ function HomePage() {
         { id: "IsCepTelNo", label: "İş Tel No" },
     ];
 
-    const initials = (name: string) =>
-        name.split(" ").filter(Boolean).slice(0, 2)
-            .map((w) => w[0].toLocaleUpperCase("tr-TR")).join("");
+    // const initials = (name: string) =>
+    //     name.split(" ").filter(Boolean).slice(0, 2)
+    //         .map((w) => w[0].toLocaleUpperCase("tr-TR")).join("");
 
     return (
         <>
@@ -249,6 +249,7 @@ function HomePage() {
                     <Table sx={{ minWidth: 850 }} aria-label="rehber tablo">
                         <TableHead>
                             <TableRow>
+                                <StyledTableCell sx={{ width: 48 }} />
                                 {headCells.map((h) => (
                                     <StyledTableCell key={h.id} sortDirection={orderBy === h.id ? order : false}>
                                         <TableSortLabel
@@ -281,6 +282,11 @@ function HomePage() {
                                         key={(item as any).Id ?? index}
                                         onClick={() => setSelectedEmployee(item)}
                                     >
+                                        <StyledTableCell component="th"><EmployeeAvatar
+                                            fotoUrl={item.FotoUrl}
+                                            name={item.AdSoyad}
+                                            size={36}
+                                        /></StyledTableCell>
                                         <StyledTableCell component="th">{toTitleCase(item.AdSoyad)}</StyledTableCell>
                                         <StyledTableCell>{item.Birim}</StyledTableCell>
                                         <StyledTableCell>{item.Takim}</StyledTableCell>
@@ -314,9 +320,11 @@ function HomePage() {
                         <Divider />
                         <DialogContent>
                             <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2, gap: 1 }}>
-                                <Avatar sx={{ width: 72, height: 72, bgcolor: "#111111", fontSize: 24 }}>
-                                    {initials(selectedEmployee.AdSoyad)}
-                                </Avatar>
+                                <EmployeeAvatar
+                                    fotoUrl={selectedEmployee.FotoUrl}
+                                    name={selectedEmployee.AdSoyad}
+                                    size={128}
+                                />
                                 <Typography variant="h6" fontWeight={700}>
                                     {toTitleCase(selectedEmployee.AdSoyad)}
                                 </Typography>

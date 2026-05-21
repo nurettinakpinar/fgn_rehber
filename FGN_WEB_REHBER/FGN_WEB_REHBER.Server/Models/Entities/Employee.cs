@@ -16,6 +16,7 @@ namespace FGN_WEB_REHBER.Server.Models.Entities
         public string? IsCepTelNo { get; set; }
         public bool Active { get; set; }
         public TalepDurumEnum TalepDurum { get; set; } = TalepDurumEnum.BEKLEMEDE;
+        public string? FotoUrl { get; set; }
 
 
         public Department? Birim { get; set; }

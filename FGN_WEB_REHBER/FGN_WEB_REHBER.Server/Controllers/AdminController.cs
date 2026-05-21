@@ -93,12 +93,63 @@ namespace FGN_WEB_REHBER.Server.Controllers
                                                 DahiliNo = e.DahiliNo,
                                                 IsCepTelNo = e.IsCepTelNo,
                                                 Active = e.Active,
-                                                TalepDurum = e.TalepDurum.ToString()
+                                                TalepDurum = e.TalepDurum.ToString(),
+                                                FotoUrl = e.FotoUrl
                                             }).ToListAsync();
             return new JsonResult(employees, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = null
             });
+        }
+
+        [HttpPost("calisan-foto/{id}")]
+        public async Task<IActionResult> CalisanFotoYukle(int id, IFormFile foto)
+        {
+            var employee = await _context.Employees.FindAsync(id);
+            if (employee == null) return NotFound("Çalışan Bulunamadı!");
+
+            var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png" };
+            if (!allowedTypes.Contains(foto.ContentType.ToLower()))
+                return BadRequest(new ProblemDetails { Title = "Sadece JPG ve PNG formatları desteklenmektedir." });
+            if (foto.Length > 2 * 1024 * 1024)
+                return BadRequest(new ProblemDetails { Title = "Dosya boyutu en fazla 2 MB olabilir." });
+
+            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "photos");
+            Directory.CreateDirectory(uploadsDir);
+
+            if (!string.IsNullOrEmpty(employee.FotoUrl))
+            {
+                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", employee.FotoUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+            }
+
+            var ext = Path.GetExtension(foto.FileName).ToLowerInvariant();
+            var fileName = $"{id}{ext}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+                await foto.CopyToAsync(stream);
+
+            employee.FotoUrl = $"/uploads/photos/{fileName}";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { FotoUrl = employee.FotoUrl });
+        }
+
+        [HttpDelete("calisan-foto/{id}")]
+        public async Task<IActionResult> CalisanFotoSil(int id)
+        {
+            var employee = await _context.Employees.FindAsync(id);
+            if (employee == null) return NotFound("Çalışan Bulunamadı!");
+
+            if (!string.IsNullOrEmpty(employee.FotoUrl))
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", employee.FotoUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+                employee.FotoUrl = null;
+                await _context.SaveChangesAsync();
+            }
+
+            return NoContent();
         }
 
         [HttpGet]
@@ -113,6 +164,12 @@ namespace FGN_WEB_REHBER.Server.Controllers
             var employee = await _context.Employees.FindAsync(id);
             if (employee == null)
                 return NotFound("Çalışan Bulunamadı!");
+
+            if (!string.IsNullOrEmpty(employee.FotoUrl))
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", employee.FotoUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+            }
 
             _context.Employees.Remove(employee);
             var result = await _context.SaveChangesAsync() > 0;

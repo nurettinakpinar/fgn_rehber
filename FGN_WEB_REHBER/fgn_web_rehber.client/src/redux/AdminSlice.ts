@@ -79,7 +79,11 @@ export const calisanSil = createAsyncThunk<number, number>(
 export const adminSlice = createSlice({
     name: "admin",
     initialState,
-    reducers: {},
+    reducers: {
+        calisanFotoUrlGuncelle(state, action: { payload: { id: number; fotoUrl: string | null } }) {
+            adminAdapter.updateOne(state, { id: action.payload.id, changes: { FotoUrl: action.payload.fotoUrl ?? undefined } });
+        },
+    },
     extraReducers: builder => {
         builder.addCase(fetchEmployees.pending, (state) => {
             state.status = "pendingFetchItems";
@@ -141,4 +145,5 @@ export const adminSlice = createSlice({
     }
 });
 
+export const { calisanFotoUrlGuncelle } = adminSlice.actions;
 export const adminSelector = adminAdapter.getSelectors((state: RootState) => state.admin);

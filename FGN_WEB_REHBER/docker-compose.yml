@@ -27,6 +27,8 @@ services:
       - "8080:8080"
     depends_on:
       - mssql
+    volumes:
+      - uploads_data:/app/wwwroot/uploads
     networks:
       - appnet
 
@@ -47,3 +49,4 @@ networks:
 
 volumes:
   mssql_data:
+  uploads_data:

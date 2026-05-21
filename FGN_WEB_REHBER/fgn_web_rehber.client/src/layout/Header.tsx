@@ -1,5 +1,6 @@
 import {
     AppBar,
+    Avatar,
     Box,
     Button,
     Dialog,
@@ -20,8 +21,8 @@ import {
     SelectChangeEvent,
 } from "@mui/material";
 import { Link, NavLink } from "react-router";
-import { useState } from "react";
-import { KeyboardArrowDown, PersonAddOutlined } from "@mui/icons-material";
+import { useRef, useState } from "react";
+import { KeyboardArrowDown, PersonAddOutlined, PhotoCamera } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { logout } from "../redux/AccountSlice";
 import requests from "../api/requests";
@@ -63,6 +64,9 @@ function Header() {
     const [takimlar, setTakimlar] = useState<{ id: number; aciklama: string }[]>([]);
 
     const [formSubmitted, setFormSubmitted] = useState(false);
+    const [fotoFile, setFotoFile] = useState<File | null>(null);
+    const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+    const fotoInputRef = useRef<HTMLInputElement>(null);
 
     // Şifre değiştirme
     const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
@@ -132,6 +136,30 @@ function Header() {
 
     function handleDialogClose() {
         setOpenDialog(false);
+        setFotoFile(null);
+        setFotoPreview(null);
+        if (fotoInputRef.current) fotoInputRef.current.value = "";
+    }
+
+    function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
+            toast.error("Sadece JPG ve PNG formatları desteklenmektedir.");
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error("Dosya boyutu en fazla 2 MB olabilir.");
+            return;
+        }
+        setFotoFile(file);
+        setFotoPreview(URL.createObjectURL(file));
+    }
+
+    function handleFotoKaldir() {
+        setFotoFile(null);
+        setFotoPreview(null);
+        if (fotoInputRef.current) fotoInputRef.current.value = "";
     }
 
     function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -157,10 +185,21 @@ function Header() {
                 return;
             }
 
-            await requests.Rehber.yeniTalepOlustur(formData);
+            const fd = new FormData();
+            fd.append("Ad", formData.Ad);
+            fd.append("Soyad", formData.Soyad);
+            fd.append("BirimId", String(formData.BirimId));
+            fd.append("TakimId", String(formData.TakimId));
+            if (formData.DahiliNo) fd.append("DahiliNo", formData.DahiliNo);
+            if (formData.IsCepTelNo) fd.append("IsCepTelNo", formData.IsCepTelNo);
+            if (fotoFile) fd.append("foto", fotoFile);
+
+            await requests.Rehber.yeniTalepOlustur(fd);
             setOpenDialog(false);
             toast.success("Talebiniz alındı. BT ekibi tarafından incelendikten sonra rehbere eklenecektir.");
-            setFormData(initialFormData); 
+            setFormData(initialFormData);
+            setFotoFile(null);
+            setFotoPreview(null);
             setFormSubmitted(false);
         } catch (error) {
             console.error("Hata:", error);
@@ -201,7 +240,7 @@ function Header() {
     if (user === undefined) return null;
 
     return (
-        <AppBar position="static" sx={{ mb: 4, background: "#111111" }}>
+        <AppBar position="static" sx={{ mb: 4, background: "#111111", borderRadius: "0 0 12px 12px" }}>
             <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                     <img
@@ -367,6 +406,37 @@ function Header() {
                                 />
                             </Grid2>
                         </Grid2>
+                        <Divider />
+                        {/* Vesikalık Fotoğraf */}
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            <Avatar
+                                src={fotoPreview ?? undefined}
+                                sx={{ width: 64, height: 64, bgcolor: "#111111", fontSize: 22, cursor: "pointer" }}
+                                onClick={() => fotoInputRef.current?.click()}
+                            >
+                                {!fotoPreview && <PhotoCamera />}
+                            </Avatar>
+                            <Box>
+                                <input
+                                    ref={fotoInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/jpg,image/png"
+                                    style={{ display: "none" }}
+                                    onChange={handleFotoChange}
+                                />
+                                <Button size="small" variant="outlined" onClick={() => fotoInputRef.current?.click()}>
+                                    {fotoFile ? "Tekrar Seç" : "Fotoğraf Seç"}
+                                </Button>
+                                {fotoFile && (
+                                    <Button size="small" color="error" sx={{ ml: 1 }} onClick={handleFotoKaldir}>
+                                        Kaldır
+                                    </Button>
+                                )}
+                                <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
+                                    Opsiyonel · JPG veya PNG · Max 2 MB
+                                </Typography>
+                            </Box>
+                        </Box>
                         <Divider>
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                                 Not: Eğer cep telefonu veya dahili yoksa bu alanlar boş bırakılabilir.

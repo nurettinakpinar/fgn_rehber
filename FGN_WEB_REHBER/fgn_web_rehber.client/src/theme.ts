@@ -54,7 +54,9 @@ const theme = createTheme({
         },
         MuiPaper: {
             styleOverrides: {
-                root: { borderRadius: 12 },
+                root: { borderRadius: 12 ,
+                    marginBottom: 16
+                },
                 elevation3: {
                     boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
                 },

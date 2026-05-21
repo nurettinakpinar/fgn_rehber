@@ -8,4 +8,5 @@
     DahiliNo: string;
     IsCepTelNo: string;
     Active?: boolean;
+    FotoUrl?: string;
 }
