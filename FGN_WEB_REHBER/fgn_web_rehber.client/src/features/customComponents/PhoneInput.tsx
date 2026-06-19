@@ -1,8 +1,11 @@
 ﻿import React from 'react';
 
 import { BaseTextFieldProps, InputAdornment, MenuItem, Select, TextField, Typography, } from '@mui/material';
-import { CountryIso2, defaultCountries, FlagImage, parseCountry, usePhoneInput, } from 'react-international-phone';
+import { CountryIso2, defaultCountries, parseCountry, usePhoneInput, } from 'react-international-phone';
 import 'react-international-phone/style.css';
+
+const flagEmoji = (iso2: string) =>
+    [...iso2.toUpperCase()].map(c => String.fromCodePoint(c.charCodeAt(0) + 127397)).join('');
 
 export interface MUIPhoneProps extends BaseTextFieldProps {
     value: string;
@@ -72,17 +75,14 @@ export const PhoneInput: React.FC<MUIPhoneProps> = ({ value, onChange, ...restPr
                             value={country.iso2}
                             onChange={(e) => setCountry(e.target.value as CountryIso2)}
                             renderValue={(value) => (
-                                <FlagImage iso2={value} style={{ display: 'flex' }} />
+                                <span style={{ display: 'flex', fontSize: '1.4rem', lineHeight: 1 }}>{flagEmoji(value)}</span>
                             )}
                         >
                             {defaultCountries.map((c) => {
                                 const country = parseCountry(c);
                                 return (
                                     <MenuItem key={country.iso2} value={country.iso2}>
-                                        <FlagImage
-                                            iso2={country.iso2}
-                                            style={{ marginRight: '8px' }}
-                                        />
+                                        <span style={{ marginRight: '8px', fontSize: '1.2rem' }}>{flagEmoji(country.iso2)}</span>
                                         <Typography marginRight="8px">{country.name}</Typography>
                                         <Typography color="gray">+{country.dialCode}</Typography>
                                     </MenuItem>

@@ -94,6 +94,15 @@ namespace FGN_WEB_REHBER.Server
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
+            // Docker volume'dan gelen uploads klasörünü açıkça serve et
+            var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads");
+            Directory.CreateDirectory(uploadsPath);
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+                RequestPath = "/uploads"
+            });
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -107,8 +116,11 @@ namespace FGN_WEB_REHBER.Server
 
             app.MapControllers();
 
-            // React SPA fallback
-            app.MapFallbackToFile("/index.html");
+            // React SPA fallback — sadece index.html mevcutsa devreye girer (dev ortamı)
+            // Docker'da React nginx'te olduğu için API container'da index.html yoktur
+            var indexHtmlPath = Path.Combine(app.Environment.WebRootPath ?? "", "index.html");
+            if (File.Exists(indexHtmlPath))
+                app.MapFallbackToFile("/index.html");
 
             // -------------------- DATABASE INIT --------------------
             using (var scope = app.Services.CreateScope())
